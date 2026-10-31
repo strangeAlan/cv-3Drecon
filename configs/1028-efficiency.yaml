@@ -1,0 +1,24 @@
+# Runtime and peak GPU memory for 5/10/20 neighbor views on three scenes (outdoor textured, indoor
+# weakly textured, large outdoor); together with 1028-allviews this gives the scaling curves.
+run_name: 1028-efficiency
+scenes: [courtyard, office, facade]
+view_counts: [5, 10, 20]
+sampling: [neighbor]
+seeds: [0]
+
+colmap:
+  camera_model: SIMPLE_RADIAL   # COLMAP default model
+  camera_mode: AUTO             # COLMAP default: share intrinsics by EXIF + size
+  sift_max_image_size: 3200     # COLMAP default
+  dense_max_image_size: 1600    # undistortion / PatchMatch resolution
+  patch_match_src_images: 20    # COLMAP CLI default
+  gpu: true
+
+vggt:
+  checkpoint: checkpoints/vggt_1b.pt
+  preprocess_mode: crop
+
+da3:
+  checkpoint: checkpoints/da3_nested_giant_large
+  process_res: 504
+  ref_view_strategy: first

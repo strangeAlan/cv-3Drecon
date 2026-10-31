@@ -1,0 +1,208 @@
+# Experiment log
+
+Each entry: hypothesis, setup (config, manifest, seed), result, verified facts /
+inferences / open issues.
+
+## 10/27 Setup
+
+- Data: DA3-BENCH `eth3d.zip` from hf-mirror (15.1 GB, sha256 `2a12b961…6917` matches
+  the HF LFS oid), extracted to `/home/hsy/datasets/da3-bench/eth3d` (35 GB), zip deleted.
+  11 scenes (DA3 benchmark list; terrace and meadow excluded upstream). Images are the
+  original distorted DSLR JPGs (THIN_PRISM_FISHEYE GT calibration), GT = combined mesh,
+  GT depth + masks per image.
+- Code: VGGT official commit `a288dd0` (43 files, git-blob sha1 verified via GitHub API);
+  DA3 repo at `/home/hsy/references/Depth-Anything-3` (commit `3d835ec`), benchmark code used unmodified.
+- Weights: local VGGT-1B (`model.pt`), DA3NESTED-GIANT-LARGE (the original, not `-1.1`).
+- Env: standalone CPython 3.11.17 + `.venv`, packages via uv from aliyun PyPI.
+- Reference numbers (DA3 paper, ETH3D, all views ≤100): VGGT AUC3 26.3 / AUC30 80.8 /
+  F1 57.2 (pred. pose); DA3-Giant 48.4 / 91.2 / 79.0. ETH3D is listed as evaluation-only
+  data in the DA3 paper.
+
+Protocol decisions:
+- Feed-forward models take the distorted images directly and are fused with their
+  predicted pinhole intrinsics, exactly as in the DA3 benchmark.
+- COLMAP (SIMPLE_RADIAL, camera mode AUTO, i.e. defaults) produces depth on its
+  undistorted grid; `fuse_colmap` maps the GT mask through COLMAP's own estimated
+  camera, then uses the same alignment / TSDF / sampling as DA3.
+- Unregistered COLMAP views are excluded from fusion; `posefail_*` counts their pairs
+  as failures.
+- `fscore_vis`: recall against GT points visible in the case's own views, because the
+  whole-scene GT makes recall a coverage measure for small view counts.
+
+Environment pitfalls found during setup (all fixed, pinned in `env/requirements.txt`):
+- open3d 0.20 + DA3 TSDF code -> empty mesh, and DA3's `sample_points_from_mesh`
+  silently substitutes 1M uniform random points in [-1,1]^3. First VGGT eval gave
+  F1 0.015 on courtyard because of this. Pinned open3d 0.19.0 (verified: 3 views ->
+  86k TSDF points, non-empty mesh) and `evaluate.py` now raises on empty meshes
+  instead of scoring random points.
+- open3d needs libusb (absent on server): preloaded from the `libusb-package` wheel.
+- opencv-python needs libgthread: use opencv-python-headless 4.11.0.86.
+- DA3 needs `moviepy.editor` -> moviepy 1.0.3.
+- pip download from aliyun ran at ~60 KB/s while curl got 11 MB/s; installed with uv.
+
+## 10/27 First observations (1027-repro, 1027-prelim; partial)
+
+Verified:
+- VGGT repro, 10/11 scenes evaluated: means AUC3 ≈ 0.31, AUC30 ≈ 0.84, F1@0.25 m ≈ 0.63
+  vs paper 26.3 / 80.8 / 57.2 (11 scenes). Same order, slightly higher; final check
+  once all 11 scenes are in.
+- F1@0.25 m saturates on indoor scenes (kicker 0.997, office 0.992): the DA3 threshold
+  cannot separate methods there -> tighter thresholds needed (Codex task 1).
+- COLMAP registration, random subsets: office 3/5, 6/10, 26/26 (763 s); pipes 2/5.
+  VGGT/DA3 run 0.3-12 s per case.
+
+Fixes:
+- `fscore_vis` first used precision against visible GT-depth points; GT depth only covers
+  scanned pixels, so correct predictions outside it counted as wrong (pipes 0.83 -> 0.49).
+  Now precision stays whole-mesh, only recall uses visible GT.
+- Added `sampling: neighbor` (random anchor + nearest views by camera distance and axis
+  angle; uses GT poses only to choose inputs). facade, 5 views: camera spread 1.5 m vs
+  8-9 m for random subsets. Random subsets keep their old directory names; neighbor
+  subsets are `nb_v<k>_s<seed>`.
+
+## 10/27 Evaluation protocol: what changed and why (verified)
+
+1. Repro check (1027-repro, 11 scenes, all views, DA3 protocol): DA3 48.4/91.1/78.2
+   (paper DA3-Giant 48.4/91.2/79.0), VGGT 29.2/81.7/63.2 (paper 26.3/80.8/57.2). Pipeline OK.
+2. DA3 GT mesh `combined_mesh.ply` is incomplete: rays through GT-depth pixels of
+   courtyard/DSC_0307 hit it only 6% of the time; GT-depth points are 17 cm (median) from it.
+   -> Geometry GT for our metrics = GT depth of all views back-projected (stride 2, 5 mm voxels,
+   cached in /home/hsy/datasets/da3-bench/eth3d_gtcloud). Self-consistency (one view vs. the
+   rest, stride 4): office median 2 mm (100% < 2 cm); courtyard 8 mm (86%), facade 7 mm (92%).
+   So 2 cm outdoors is near the GT floor; 5/10 cm are the main outdoor thresholds.
+   GT depth is z-depth (ray-length reading is off by ~1 m); the THIN_PRISM_FISHEYE model vs a
+   plain pinhole changes the back-projection by ~2 mm only (lens is close to rectilinear).
+3. DA3 TSDF fusion is unfair to COLMAP: PatchMatch geometric depth is sparse (10-28% valid
+   pixels), TSDF extracts little surface from it (pipes all views: recall 0.07 TSDF vs 0.77
+   direct points). Raw depth maps instead carry outliers (pipes: 79% of points < 25 cm).
+   -> COLMAP/hybrid are evaluated on their standard output, the stereo-fusion cloud
+   (min_num_pixels 2 / 3 / 5 for <=5 / <=10 / more views); VGGT/DA3 on back-projected depth
+   resampled to a common 1600 px grid (bilinear, no interpolation across >10% depth jumps).
+4. Camera-center Sim(3) alignment (DA3) is ill-conditioned for neighbor subsets (cameras within
+   1-2 m, scene depth >10 m): COLMAP courtyard neighbor 10 views scored F@5cm 0.065 < 5 views
+   0.242. -> Point-cloud metrics now align on per-pixel correspondences (predicted point vs
+   GT-depth point of the same pixel, 20k per view, Umeyama trimmed at 3x median, 5 iters), as
+   in point-map evaluations. Inlier fraction ~0.97-0.99 for VGGT/DA3, ~0.72-0.78 for COLMAP
+   depth maps (outliers). Pose metrics are relative (alignment-free) and unaffected.
+   DA3-protocol columns are kept only for the repro comparison.
+5. COLMAP with <3 registered views: pose metrics computed, reconstruction counted as failed.
+6. PatchMatch src images now explicitly 20 (COLMAP CLI default; pycolmap passes -1).
+
+## 10/27 Hybrid method, first exploration (1027-hybridtest: office, courtyard x neighbor 5/10, seed 0)
+
+Observed (point-cloud metrics, point alignment):
+- COLMAP: most precise (acc median 5-14 mm) but incomplete (comp median 62-450 mm; office
+  recall@5cm ~0.2). VGGT/DA3: acc 12-32 mm, comp 8-23 mm, F@5cm 0.74-0.98.
+- With neighbor subsets COLMAP registers all views (office 5/5); registration failures in the
+  prelim run came from random (low-overlap) subsets.
+- hybrid_vggt_ba (FF init + triangulation + BA + PatchMatch + fusion) ~ COLMAP: similar
+  precision, same holes. hybrid_vggt_none (no BA): PatchMatch with FF cameras gives few
+  consistent points (office 0.01-0.03M fused) -> BA is needed.
+- First completion design (fill PatchMatch holes before COLMAP fusion, only near MVS support)
+  raised office-5 recall@5cm 0.16 -> 0.23 only: fills far from support were not made and
+  COLMAP's 1% depth-consistency check rejected most fills. Replaced by: fused MVS cloud +
+  FF depth in its holes (scale + guided-filter residual correction), no 1% check.
+
+## 10/27 Hybrid method: closed (negative result; user decision: not required by the course)
+
+Final exploration (1027-hybridtest, point alignment + similarity ICP to GT for every method):
+- ICP refinement (Tanks and Temples style) applied to all methods' final clouds; last-step
+  rotation ~0.01 deg, so converged. It mainly helps VGGT/DA3 (courtyard-5 DA3 F@2cm 0.458 -> 0.577).
+- F@2cm, DA3 vs best hybrid (DA3 init + BA + PatchMatch + fused cloud + aligned DA3 points in
+  its holes): courtyard-5 0.577 / 0.577, courtyard-10 0.509 / 0.470, office-5 0.905 / 0.880,
+  office-10 0.823 / 0.799. Guided-filter residual correction hurt in every case.
+- Hybrid MVS part is less precise than COLMAP's own (courtyard-5 precision@5cm 0.71 vs 0.85):
+  FF init + BA on few SIFT points gives worse cameras than full incremental SfM.
+- Why the combination cannot help here: on the surface COLMAP reconstructs, COLMAP vs DA3
+  accuracy median is 4.2-6.4 mm vs 6.8-9.5 mm (share < 1 cm 0.78-0.84 vs 0.53-0.71; both 100%
+  < 2 cm). The classical advantage is ~3 mm, below the outdoor GT floor (~7 mm), while its
+  incompleteness costs most of the F-score.
+Code kept (src/run_hybrid.py, src/depth_completion.py) for the report's exploratory section;
+not part of the main experiment.
+
+## 10/27 Main sweep launched: 1027-main
+
+11 scenes x {5, 10, 20} views x {neighbor, random} x seeds {0, 1, 2}, seed-major order,
+181 cases (20 views skipped for pipes/relief; relief_2 20 = all). COLMAP sharded over both GPUs.
+
+Cleanup 10/27: 1027-prelim keeps raw outputs and info.json only (its COLMAP run predates stereo
+fusion and its metrics used camera-center alignment; registration counts quoted in the proposal
+come from these info.json files). Stale per-case metrics, TSDF caches and logs removed.
+Report: report/proposal.tex and report/report.tex (CVPR template, TinyTeX pdfLaTeX via
+report/build.sh). Figures: scripts/make_figures.py; tables: scripts/summarize.py.
+scripts/finish_1027_main.sh evaluates the main sweep automatically when it finishes.
+
+## 10/28 Proposal final (collaborators' rewrite) -> follow-up experiments it commits to
+
+Title now "Multi-View 3D Reconstruction from Sparse to Dense Views". The proposal promises:
+1. all-views setting for every scene (main sweep has it only for relief_2) -> run COLMAP/VGGT/DA3 on all views;
+2. peak GPU memory for all methods -> add COLMAP GPU memory monitoring (nvidia-smi sampling);
+3. "end-to-end" runtime = excluding model loading, including image reading -> VGGT timer must include
+   load_and_preprocess_images (DA3 timer already includes its own image loading).
+
+## 10/28 Main sweep 1027-main: results (181 cases x 3 methods, results/1027-main/summary.txt)
+
+Fix: evaluate.py icp_sim3 crashed (UnboundLocalError) when the first ICP iteration had <100 pairs;
+now keeps the initial alignment in that case.
+
+Verified (means over scenes x seeds, same cases for all methods; F = point-cloud F-score):
+- COLMAP registration: neighbor 0.92/0.97/0.96 (5/10/20 views), random 0.43/0.62/0.81; 12 of 33
+  random-5 cases fail completely. playground is the weakest scene even with neighbor views (0.70).
+- F@5cm neighbor: DA3 0.80/0.80/0.74 > VGGT 0.77/0.72/0.61 > COLMAP 0.37/0.47/0.45.
+  random: DA3 0.54/0.69/0.68 > VGGT 0.43/0.53/0.52 > COLMAP 0.11/0.28/0.36.
+- COLMAP is the most precise (precision@5cm 0.85 vs DA3 0.75 at neighbor 10/20; accuracy median
+  15 mm vs 27-36 mm) but least complete (completeness median 0.21-0.45 m vs 0.015-0.018 m).
+- Pose AUC@5 with failures counted, neighbor: COLMAP 0.64/0.70/0.64, DA3 0.68/0.64/0.57,
+  VGGT 0.64/0.53/0.41 -> where COLMAP registers, its cameras are competitive or better.
+Unexpected, not yet explained:
+- Feed-forward F-scores drop with more neighbor views (VGGT F@5cm 0.77 -> 0.61, precision 0.74 ->
+  0.54 from 5 to 20 views) and COLMAP does not improve from 10 to 20. Candidate (inference only):
+  20-view subsets span a larger area/depth range, so absolute errors grow; check per scene and
+  with errors normalized by scene depth before writing anything.
+- Runtime in this run: feed-forward = inference only (old timer); end-to-end numbers come from
+  1028-efficiency / 1028-allviews.
+
+## 10/28 Follow-up runs started (proposal commitments)
+- Measurement: NVML process-level peak GPU memory for all methods (common.GpuMemSampler, includes
+  CUDA context and model weights); feed-forward time is end-to-end (image reading included, model
+  loading excluded, one warm-up pass); VGGT also logs reading vs inference: reading 6-27 s for
+  5-20 views (official loader decodes 24 MP JPEGs sequentially), inference 0.6-1.6 s. COLMAP logs
+  match statistics (keypoints, verified pairs, inliers, largest component of the pair graph).
+- 1028-allviews (11 scenes, all images), 1028-efficiency (courtyard/office/facade x neighbor
+  5/10/20, seed 0), then scripts/match_stats.py on 1027-main for the failure analysis.
+
+## 10/31 Follow-up runs: status (all finished, verified from files)
+- 1028-allviews (11 scenes, results/1028-allviews/summary.txt), means: F@5cm DA3 0.765 > VGGT 0.613 >
+  COLMAP 0.518; COLMAP reg 0.989, precision@5cm 0.825 (highest), recall@5cm 0.400; pose AUC@5 COLMAP 0.704,
+  DA3 0.631, VGGT 0.435; time COLMAP 1154 s, VGGT 29.9 s, DA3 4.8 s (end-to-end).
+- 1028-efficiency (courtyard/office/facade x neighbor 5/10/20, seed 0; from info.json, not evaluated for
+  geometry): mean end-to-end time COLMAP 118/272/666 s, VGGT 6.0/11.4/24.3 s (mostly image reading),
+  DA3 2.1/3.7/6.4 s; max NVML peak GPU memory COLMAP 5.8 GB, VGGT 9.8/11.3/11.8 GB, DA3 11.8/13.7/14.6 GB.
+- Match statistics for 1027-main: results/1027-main/match_stats_{0,1}of2.csv (181 cases), not yet analysed.
+
+## 10/31 Analyses for the report (verified) and report draft v1
+
+1. Same views, more context (scripts/nested_views.py -> results/1027-main/nested_views.csv). Neighbor subsets are
+   nested (5 ⊂ 10 ⊂ 20 for the same seed; checked 81/81 on the manifest). The 5 shared views are cut out of the
+   10/20-view predictions and evaluated like a 5-view case; 24 (scene, seed) pairs with a 20-view run:
+   - F@5cm on the same 5 views: DA3 78.5 / 81.1 / 80.5, VGGT 74.0 / 74.7 / 72.2 (5 / 10 / 20 input views)
+     -> feed-forward geometry does not degrade with more views; the drop in the main table comes from the
+     additional parts of larger subsets (median view-angle 20 -> 57 deg, depth p95 8.9 -> 13.6 m, from GT).
+   - AUC@5 on the same 5 views: COLMAP 62.6 / 78.4 / 78.6 (BA + more images registered), DA3 71.4 / 65.9 / 66.1,
+     VGGT 62.3 / 62.3 / 48.6.
+2. COLMAP failures (match_stats): 13/180 subsets fail completely (12 random-5, 1 playground neighbor-5); 9/13 have a
+   disconnected verified-match graph. In random subsets 308 images unregistered, only 59 outside the largest
+   connected component -> most unregistered images are matched but not registrable. playground nb_v5_s1: 10/10
+   pairs verified, median 987 inliers, "No good initial image pair found" (log). Baseline/depth ratio does not
+   predict neighbor failures (checked, no trend).
+3. delivery_area all views: COLMAP 40/40 registered but 306/780 verified pairs; camera-center error after Sim(3)
+   grows smoothly to 0.8 m along an 11 m path (distortion, not a mis-registered cluster) -> F@5cm 0.17.
+4. Pose over COLMAP-registered pairs only (pose_auc05): COLMAP best in every setting (0.62-0.75 vs DA3 0.45-0.68);
+   different pair sets per method, stated as such in the report.
+5. Indoor (kicker, office, pipes, relief, relief_2, terrains) vs outdoor: median GT depth 2.7 vs 5.7 m;
+   neighbor F@5 DA3 0.90/0.66, VGGT 0.82/0.59, COLMAP 0.48/0.37. office: 5.1k SIFT keypoints vs ~10k elsewhere.
+6. COLMAP time: PatchMatch 70-91% of the total (1028 runs). COLMAP peak GPU 5.8 GB in every run.
+
+Report: report/report.tex all sections written (v1, 10/31); tables generated by scripts/make_tables.py into
+report/tables/, qualitative figure by scripts/make_qualitative.py (courtyard / office, nb_v10_s0). Runtime figure
+dropped in favour of tab_efficiency (fig_runtime used the old inference-only timer).

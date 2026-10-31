@@ -1,0 +1,16 @@
+# Sanity check of our pipeline against published numbers: all 11 DA3-benchmark
+# ETH3D scenes, all views. DA3 paper (Tab. comp_pose / comp_recon) reports for
+# VGGT on ETH3D: AUC3 26.3, AUC30 80.8, F1 57.2 (predicted poses).
+run_name: 1027-repro
+scenes: [courtyard, electro, kicker, pipes, relief, delivery_area, facade, office, playground, relief_2, terrains]
+view_counts: [all]
+seeds: [0]
+
+vggt:
+  checkpoint: checkpoints/vggt_1b.pt
+  preprocess_mode: crop
+
+da3:
+  checkpoint: checkpoints/da3_nested_giant_large
+  process_res: 504
+  ref_view_strategy: first

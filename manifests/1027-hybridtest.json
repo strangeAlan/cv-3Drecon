@@ -1,0 +1,105 @@
+{
+ "config": "configs/1027-hybridtest.yaml",
+ "cases": [
+  {
+   "scene": "office",
+   "n_views": 5,
+   "sampling": "neighbor",
+   "seed": 0,
+   "indices": [
+    0,
+    12,
+    13,
+    18,
+    22
+   ],
+   "images": [
+    "DSC_0251.JPG",
+    "DSC_0219.JPG",
+    "DSC_0220.JPG",
+    "DSC_0229.JPG",
+    "DSC_0252.JPG"
+   ]
+  },
+  {
+   "scene": "office",
+   "n_views": 10,
+   "sampling": "neighbor",
+   "seed": 0,
+   "indices": [
+    0,
+    1,
+    3,
+    5,
+    12,
+    13,
+    18,
+    19,
+    21,
+    22
+   ],
+   "images": [
+    "DSC_0251.JPG",
+    "DSC_0250.JPG",
+    "DSC_0248.JPG",
+    "DSC_0242.JPG",
+    "DSC_0219.JPG",
+    "DSC_0220.JPG",
+    "DSC_0229.JPG",
+    "DSC_0230.JPG",
+    "DSC_0235.JPG",
+    "DSC_0252.JPG"
+   ]
+  },
+  {
+   "scene": "courtyard",
+   "n_views": 5,
+   "sampling": "neighbor",
+   "seed": 0,
+   "indices": [
+    12,
+    13,
+    14,
+    15,
+    24
+   ],
+   "images": [
+    "DSC_0286.JPG",
+    "DSC_0287.JPG",
+    "DSC_0288.JPG",
+    "DSC_0289.JPG",
+    "DSC_0310.JPG"
+   ]
+  },
+  {
+   "scene": "courtyard",
+   "n_views": 10,
+   "sampling": "neighbor",
+   "seed": 0,
+   "indices": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    23,
+    24
+   ],
+   "images": [
+    "DSC_0286.JPG",
+    "DSC_0287.JPG",
+    "DSC_0288.JPG",
+    "DSC_0289.JPG",
+    "DSC_0290.JPG",
+    "DSC_0291.JPG",
+    "DSC_0292.JPG",
+    "DSC_0293.JPG",
+    "DSC_0309.JPG",
+    "DSC_0310.JPG"
+   ]
+  }
+ ]
+}

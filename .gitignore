@@ -1,0 +1,11 @@
+data/
+runs/
+checkpoints/
+third_party/
+*.ply
+*.bin
+__pycache__/
+*.log
+.venv/
+env/python3.11/
+report/build/

@@ -1,0 +1,26 @@
+# Main baseline sweep: all 11 DA3-benchmark ETH3D scenes x {5, 10, 20} views x
+# {neighbor (controlled overlap), random (overlap left to chance)} x 3 seeds.
+# Cases are ordered seed-major so that a partial run still covers whole seeds.
+run_name: 1027-main
+scenes: [courtyard, electro, kicker, pipes, relief, delivery_area, facade, office, playground, relief_2, terrains]
+view_counts: [5, 10, 20]
+sampling: [neighbor, random]
+seeds: [0, 1, 2]
+order: seed_major
+
+colmap:
+  camera_model: SIMPLE_RADIAL   # COLMAP default model
+  camera_mode: AUTO             # COLMAP default: share intrinsics by EXIF + size
+  sift_max_image_size: 3200     # COLMAP default
+  dense_max_image_size: 1600    # undistortion / PatchMatch resolution
+  patch_match_src_images: 20    # COLMAP CLI default
+  gpu: true
+
+vggt:
+  checkpoint: checkpoints/vggt_1b.pt
+  preprocess_mode: crop
+
+da3:
+  checkpoint: checkpoints/da3_nested_giant_large
+  process_res: 504
+  ref_view_strategy: first

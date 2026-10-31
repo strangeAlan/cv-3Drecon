@@ -1,0 +1,36 @@
+# Small exploration set for the new dense pipeline (stereo fusion) and the hybrid method:
+# office = weak texture, sparse views (COLMAP registration fails, hybrid should help);
+# courtyard = textured (COLMAP works, hybrid must not be worse).
+run_name: 1027-hybridtest
+scenes: [office, courtyard]
+view_counts: [5, 10]
+sampling: [neighbor]
+seeds: [0]
+
+colmap:
+  camera_model: SIMPLE_RADIAL   # COLMAP default model
+  camera_mode: AUTO             # COLMAP default: share intrinsics by EXIF + size
+  sift_max_image_size: 3200     # COLMAP default
+  dense_max_image_size: 1600    # undistortion / PatchMatch resolution
+  patch_match_src_images: 20    # COLMAP CLI default
+  gpu: true
+
+vggt:
+  checkpoint: checkpoints/vggt_1b.pt
+  preprocess_mode: crop
+
+da3:
+  checkpoint: checkpoints/da3_nested_giant_large
+  process_res: 504
+  ref_view_strategy: first
+
+completion:                     # hybrid module 3 (depth_completion.py)
+  coverage_radius: 2            # px dilation of projected fused points marking covered pixels
+  align_samples_per_view: 20000 # FF/MVS correspondences per view for the FF -> MVS Sim(3)
+  min_support_pixels: 500       # min correspondences overall
+  icp_samples: 200000           # FF points (covered pixels) used for the FF -> MVS ICP refinement
+  icp_iters: 10
+  gf_radius: 24                 # guided filter radius, px on the 1600 px grid (gf variant)
+  gf_eps: 0.001                 # guided filter regularizer (gray in [0, 1])
+  min_support: 0.05             # min guided-filtered PatchMatch fraction to apply the correction
+  voxel: 0.005                  # per-view voxel size of fill points (m, = evaluation voxel)

@@ -1,0 +1,24 @@
+# All available images per scene (the "dense" end of the view range), with end-to-end runtime
+# (image reading included, model loading excluded) and NVML peak GPU memory for every method,
+# and COLMAP feature/matching statistics.
+run_name: 1028-allviews
+scenes: [courtyard, electro, kicker, pipes, relief, delivery_area, facade, office, playground, relief_2, terrains]
+view_counts: [all]
+seeds: [0]
+
+colmap:
+  camera_model: SIMPLE_RADIAL   # COLMAP default model
+  camera_mode: AUTO             # COLMAP default: share intrinsics by EXIF + size
+  sift_max_image_size: 3200     # COLMAP default
+  dense_max_image_size: 1600    # undistortion / PatchMatch resolution
+  patch_match_src_images: 20    # COLMAP CLI default
+  gpu: true
+
+vggt:
+  checkpoint: checkpoints/vggt_1b.pt
+  preprocess_mode: crop
+
+da3:
+  checkpoint: checkpoints/da3_nested_giant_large
+  process_res: 504
+  ref_view_strategy: first

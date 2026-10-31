@@ -1,0 +1,6 @@
+sampling n_views method  n_cases  reg_rate  auc05  auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  acc_pc_median  comp_pc_median  time_s
+     all     all colmap       11     0.989  0.704  0.913           0.310           0.518           0.639              0.825           0.400         0.0213          0.1290  1153.9
+     all     all   vggt       11     1.000  0.435  0.817           0.363           0.613           0.784              0.522           0.793         0.0593          0.0189    29.9
+     all     all    da3       11     1.000  0.631  0.911           0.511           0.765           0.888              0.682           0.895         0.0323          0.0120     4.8
+
+11 cases with all of colmap, da3, vggt

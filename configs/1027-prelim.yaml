@@ -1,0 +1,24 @@
+# Preliminary run for the proposal: a few scenes, three view counts, one seed.
+# Scenes: two indoor scenes with weak texture (office, pipes) where classical
+# matching is expected to struggle, two outdoor textured scenes (courtyard,
+# facade) where COLMAP is expected to do well.
+run_name: 1027-prelim
+scenes: [office, pipes, courtyard, facade]
+view_counts: [5, 10, all]
+seeds: [0]
+
+colmap:
+  camera_model: SIMPLE_RADIAL   # COLMAP default model
+  camera_mode: AUTO             # COLMAP default: share intrinsics by EXIF + size
+  sift_max_image_size: 3200     # COLMAP default
+  dense_max_image_size: 1600    # undistortion / PatchMatch resolution
+  gpu: true
+
+vggt:
+  checkpoint: checkpoints/vggt_1b.pt
+  preprocess_mode: crop         # official default: width 518
+
+da3:
+  checkpoint: checkpoints/da3_nested_giant_large
+  process_res: 504              # DA3 default
+  ref_view_strategy: first      # same as the DA3 benchmark config

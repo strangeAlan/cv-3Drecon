@@ -1,0 +1,81 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+\usepackage[pagenumbers]{cvpr}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
+
+\title{Multi-View 3D Reconstruction from Sparse to Dense Views\\[2pt]
+\large Project Proposal}
+
+\author{Shunyang Huang\qquad Mingyu Lin}
+
+\begin{document}
+\maketitle
+
+\section{Motivation}
+
+Multi-view 3D reconstruction aims to recover camera poses and scene geometry from a set of images. Traditional pipelines such as COLMAP~\cite{schonberger2016sfm,schonberger2016mvs} rely on feature matching, incremental structure-from-motion, bundle adjustment, and multi-view stereo. While these methods can achieve high reconstruction accuracy, they involve computationally expensive per-scene optimization and depend on reliable feature correspondences, which can lead to failures in challenging conditions such as low-texture regions and limited view overlap.
+
+Recent feed-forward models such as VGGT~\cite{wang2025vggt} and Depth Anything 3 (DA3)~\cite{lin2025da3} address these limitations by learning geometric priors from large-scale data. Instead of relying on multi-stage optimization pipelines, they directly predict camera parameters and dense scene geometry from input images in a single forward pass. This enables faster reconstruction and reduces dependence on explicit feature matching.
+
+In this project, we compare traditional optimization-based and feed-forward reconstruction methods to evaluate their accuracy, completeness, robustness, and efficiency. We investigate how their performance changes with the number of input views, view overlap, and scene texture, aiming to understand the strengths and limitations of each approach.
+
+\section{Methods}
+
+\paragraph{Traditional method: COLMAP.}
+SIFT features~\cite{lowe2004sift} detected in a difference-of-Gaussian scale space, exhaustive matching with
+RANSAC-based geometric verification~\cite{fischler1981ransac}, incremental structure-from-motion with bundle
+adjustment~\cite{schonberger2016sfm}, image undistortion, PatchMatch stereo with geometric consistency, and
+stereo fusion into a point cloud~\cite{schonberger2016mvs}. We use COLMAP's default settings.
+
+\paragraph{Advanced methods: VGGT and DA3.}
+VGGT~\cite{wang2025vggt} (1.2B parameters) and DA3~\cite{lin2025da3} are transformers that take a set of
+unposed images and output camera parameters and per-view depth maps. We use the released pretrained weights
+without fine-tuning.
+
+\section{Dataset}
+
+ETH3D high-resolution multi-view benchmark~\cite{schops2017eth3d}: 11 indoor and outdoor scenes with 14 to 76
+DSLR images of $6048\times4032$ pixels each, ground-truth camera poses and laser-scan depth. All methods are
+evaluated on the same scenes and the same image subsets. ETH3D is not part of the training data of VGGT or DA3.
+
+
+\section{Experimental Design}
+
+\paragraph{Input views.}
+For each scene, we evaluate 5, 10, 20, and all available images.
+For each subset size, we use two sampling strategies:
+\emph{neighbor} (spatially nearby views with high overlap) and
+\emph{random} (uniformly sampled views with potentially lower
+overlap). Each setting is repeated with three random seeds.
+All methods use identical image subsets.
+
+\paragraph{Reconstruction quality.}
+We evaluate both camera estimation and reconstructed geometry.
+For cameras, we measure the relative rotation and translation
+errors between image pairs, as well as the fraction of
+successfully registered images. For geometry, we align each
+reconstruction to the ground-truth laser scan and measure
+accuracy, completeness, and F-score at 2, 5, and 10\,cm.
+
+\paragraph{Robustness.}
+We measure reconstruction success rates across different
+view counts and sampling strategies. We also analyze failure
+cases, particularly those involving insufficient feature
+matches, low-texture regions, and limited view overlap.
+
+\paragraph{Efficiency.}
+We measure end-to-end reconstruction runtime and peak GPU
+memory usage under the same hardware setup. We compare
+computational costs across different numbers of input views.
+
+
+{\small
+\bibliographystyle{ieeenat_fullname}
+\bibliography{refs}
+}
+
+\end{document}
