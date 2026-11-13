@@ -1,0 +1,27 @@
+# DA3-initialised bundle adjustment (src/run_da3ba.py), exploration set of 13 cases from 1027-main:
+# colmap_fails (COLMAP registers <60% or fails), colmap_better (COLMAP AUC@5 >> DA3), da3_good
+# (DA3 AUC@5 > 0.8, where the 10/27 hybrid made DA3's cameras worse). Manifest lists the group per case.
+run_name: 1113-da3ba-explore
+source_run: 1027-main           # DA3 predictions are read from runs/<source_run>/da3
+
+colmap:                         # feature extraction / matching: same as the COLMAP baseline
+  camera_model: RADIAL          # COLMAP default SIMPLE_RADIAL cannot fit the ETH3D lenses (LOG 11/13)
+  camera_mode: AUTO
+  sift_max_image_size: 3200
+  dense_max_image_size: 1600
+  patch_match_src_images: 20
+  gpu: true
+
+da3ba:
+  lift_tol: 0.05                # drop lifted observations farther than 5% of their depth from the track median
+  min_points: 50                # fewer lifted tracks -> keep DA3
+  rounds: [[16, 128], [4, 32], [1, 8]]   # [Cauchy scale px, max reprojection error px] per BA round
+  final_rounds: [[1, 4], [1, 4]]         # after COLMAP triangulation with the refined cameras
+  min_obs: 30                   # views with fewer observations keep their (mapped) DA3 pose
+completion:                     # dense stage hole filling (depth_completion.py, no guided correction)
+  coverage_radius: 2            # px dilation of projected fused points marking covered pixels
+  align_samples_per_view: 20000 # FF/MVS correspondences per view for the FF -> MVS Sim(3)
+  min_support_pixels: 500       # min correspondences overall
+  icp_samples: 200000           # FF points (covered pixels) used for the FF -> MVS ICP refinement
+  icp_iters: 10
+  voxel: 0.005                  # per-view voxel size of fill points (m, = evaluation voxel)

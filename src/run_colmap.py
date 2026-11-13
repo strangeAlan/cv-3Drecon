@@ -42,7 +42,7 @@ def run_case(out, case, gt, ccfg):
     n_reg = rec.num_reg_images() if rec else 0
     extra = {"config": ccfg, "match_stats": stats}
     if n_reg < 2:
-        write_failure(out, "colmap", case, gt, times, extra, n_reg)
+        write_failure(out, ccfg.get("method_name", "colmap"), case, gt, times, extra, n_reg)
         return f"FAILED ({n_reg} registered)"
     (work / "sparse_best").mkdir()
     rec.write(work / "sparse_best")
@@ -50,7 +50,7 @@ def run_case(out, case, gt, ccfg):
     rec_dense, xyz, dtimes, min_pix, _ = dense(work, work / "sparse_best", image_dir, ccfg)
     times.update(dtimes)
     extra["fusion_min_num_pixels"] = min_pix
-    reg = export_case(out, "colmap", case, gt, rec_dense, distorted_cameras(rec), xyz, times, extra)
+    reg = export_case(out, ccfg.get("method_name", "colmap"), case, gt, rec_dense, distorted_cameras(rec), xyz, times, extra)
     return f"{sum(reg)}/{len(reg)} registered, {len(xyz) / 1e6:.2f}M fused points"
 
 
@@ -73,14 +73,15 @@ def main():
     ds = eth3d_dataset()
 
     for case in cases:
-        out = case_dir(run_dir, "colmap", case)
+        method = ccfg.get("method_name", "colmap")  # e.g. colmap_radial: same pipeline, other camera model
+        out = case_dir(run_dir, method, case)
         if is_done(out):
             continue
         t0 = time.time()
         with GpuMemSampler() as mem:
             msg = run_case(out, case, case_gt(ds, case), ccfg)
         _add_info(out, peak_gpu_gb=mem.peak_gb, wall_s=time.time() - t0)
-        print(f"colmap {case['scene']} {case.get('sampling', 'random')} {case['n_views']} views s{case['seed']}: "
+        print(f"{method} {case['scene']} {case.get('sampling', 'random')} {case['n_views']} views s{case['seed']}: "
               f"{msg}, {time.time() - t0:.0f}s", flush=True)
 
 
