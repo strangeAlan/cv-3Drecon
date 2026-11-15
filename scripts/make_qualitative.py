@@ -98,7 +98,7 @@ def main():
             pts, err = final_points(ds, run, m, scene, case)
             panels.append((label, render(pts, err, E, cam, scale)))
             print(f"{scene} {case} {label}: {len(pts)} points, median error {np.median(err) * 100 if len(err) else np.nan:.1f} cm")
-        rows.append((f"{scene}, {case.split('_')[1][1:]} views", panels))
+        rows.append((scene, panels))  # view count goes in the caption
 
     ncol = len(rows[0][1])
     fig, axes = plt.subplots(len(rows), ncol, figsize=(6.9, 6.9 / ncol * 0.69 * len(rows) + 0.4), squeeze=False)
