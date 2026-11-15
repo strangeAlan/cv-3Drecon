@@ -2,117 +2,211 @@
 
 ## Subsets (1027-main manifest)
 
-180 cases with all of: colmap, vggt, da3 (values in %, time in s)
+123 cases with all of: colmap, colmap_radial, vggt, vggtba, vggtba_ds, da3, da3ba, da3ba_ds, hybrid_da3ba, hybrid_da3ba_fill (values in %, time in s)
 
 ```
-sampling n_views method  reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s  n
-neighbor       5 colmap      92.1            63.9            81.4            22.0            36.6            46.8               75.0            26.2   108.0 33
-neighbor       5   vggt     100.0            63.6            91.2            52.3            76.5            87.7               74.3            79.2     0.3 33
-neighbor       5    da3     100.0            68.0            93.2            55.2            79.7            90.8               76.3            83.9     0.9 33
-neighbor      10 colmap      96.7            69.8            88.4            29.3            46.5            58.0               85.5            33.9   252.6 33
-neighbor      10   vggt     100.0            52.9            84.9            47.0            72.1            84.1               68.3            77.0     0.5 33
-neighbor      10    da3     100.0            64.3            92.4            55.5            79.6            90.8               75.2            85.1     1.6 33
-neighbor      20 colmap      95.8            64.0            83.2            26.2            44.5            57.3               85.0            32.0   579.9 24
-neighbor      20   vggt     100.0            40.5            81.7            36.0            61.1            77.0               54.2            72.4     1.0 24
-neighbor      20    da3     100.0            57.1            91.1            49.1            74.2            87.3               67.5            84.3     3.3 24
-  random       5 colmap      43.0            16.8            23.5             6.8            10.7            14.4               48.4             6.8    49.7 33
-  random       5   vggt     100.0            30.5            60.3            24.2            42.8            55.4               42.9            44.0     0.3 33
-  random       5    da3     100.0            44.7            73.0            34.9            54.4            66.7               54.0            55.7     0.9 33
-  random      10 colmap      62.4            27.6            37.9            15.4            27.8            37.5               81.4            18.2   152.0 33
-  random      10   vggt     100.0            33.1            73.9            29.6            52.8            68.2               47.9            59.9     0.5 33
-  random      10    da3     100.0            53.8            87.8            44.8            68.9            81.8               64.9            74.3     1.6 33
-  random      20 colmap      81.2            40.5            61.1            17.9            36.0            48.4               81.4            24.0   451.5 24
-  random      20   vggt     100.0            37.1            78.1            28.7            51.7            68.1               44.4            65.1     1.0 24
-  random      20    da3     100.0            56.0            87.3            44.1            68.3            82.4               61.3            79.6     3.1 24
+sampling n_views            method  reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s  n
+neighbor       5            colmap      90.7            60.9            78.7            21.9            36.0            45.8               74.7            25.5   106.4 28
+neighbor       5     colmap_radial      92.9            84.7            89.5            43.5            54.3            60.2               86.9            41.8   206.4 28
+neighbor       5              vggt     100.0            62.4            91.3            54.2            79.5            90.1               77.2            82.2     0.3 28
+neighbor       5            vggtba     100.0            95.6            99.2            50.7            77.5            88.3               73.3            83.0    14.3 28
+neighbor       5         vggtba_ds     100.0            95.6            99.2            53.4            79.2            90.2               75.2            84.1    14.3 28
+neighbor       5               da3     100.0            67.6            93.0            58.0            81.9            92.4               78.4            86.2     0.9 28
+neighbor       5             da3ba     100.0            96.0            99.3            55.4            80.8            92.2               76.6            86.2    19.5 28
+neighbor       5          da3ba_ds     100.0            96.0            99.3            57.6            80.3            90.0               76.8            84.5    19.5 28
+neighbor       5      hybrid_da3ba     100.0            96.0            99.3            48.3            59.8            66.4               97.5            46.0   137.3 28
+neighbor       5 hybrid_da3ba_fill     100.0            96.0            99.3            53.6            74.3            84.2               68.6            83.7   137.3 28
+neighbor      10            colmap      96.5            68.6            87.7            29.4            46.4            58.0               84.8            34.0   253.6 23
+neighbor      10     colmap_radial      97.0            89.5            93.1            51.5            66.4            73.9               96.1            53.1   388.0 23
+neighbor      10              vggt     100.0            52.8            85.8            47.0            73.4            85.5               69.3            78.7     0.5 23
+neighbor      10            vggtba     100.0            90.6            94.6            42.6            69.5            82.9               63.1            79.1    59.1 23
+neighbor      10         vggtba_ds     100.0            90.6            94.6            48.0            74.0            87.4               68.2            82.1    59.1 23
+neighbor      10               da3     100.0            64.6            92.6            55.0            80.3            91.9               75.5            86.4     1.5 23
+neighbor      10             da3ba     100.0            95.1            99.0            53.2            80.2            91.1               75.1            87.0    43.9 23
+neighbor      10          da3ba_ds     100.0            95.1            99.0            53.3            80.4            91.3               75.2            87.2    43.9 23
+neighbor      10      hybrid_da3ba     100.0            95.1            99.0            51.0            65.9            73.3               96.0            52.4   304.7 23
+neighbor      10 hybrid_da3ba_fill     100.0            95.1            99.0            48.2            73.2            84.4               65.0            85.8   304.7 23
+neighbor      20            colmap      96.2            62.8            81.8            26.0            44.9            58.3               85.8            32.1   585.1 16
+neighbor      20     colmap_radial      97.8            92.8            95.3            51.7            68.2            75.9               96.0            55.5   889.0 16
+neighbor      20              vggt     100.0            38.9            80.8            34.4            60.1            77.4               52.5            73.0     1.0 16
+neighbor      20            vggtba     100.0            92.8            97.0            30.4            55.4            74.3               46.5            73.2   131.9 16
+neighbor      20         vggtba_ds     100.0            92.8            97.0            36.3            62.7            78.9               54.5            76.9   131.9 16
+neighbor      20               da3     100.0            56.3            91.2            49.9            75.8            88.6               68.7            86.0     3.1 16
+neighbor      20             da3ba     100.0            97.0            99.4            47.9            75.2            89.1               68.3            86.5   174.4 16
+neighbor      20          da3ba_ds     100.0            97.0            99.4            51.4            78.9            90.9               72.1            88.5   174.4 16
+neighbor      20      hybrid_da3ba     100.0            97.0            99.4            52.0            68.7            76.1               96.3            55.8   762.9 16
+neighbor      20 hybrid_da3ba_fill     100.0            97.0            99.4            46.3            73.1            84.9               63.6            89.3   762.9 16
+  random       5            colmap      53.6            20.5            29.9             8.6            12.9            16.9               56.1             8.5    61.1 22
+  random       5     colmap_radial      56.4            29.6            33.5            17.4            22.0            25.5               68.1            15.0   112.7 22
+  random       5              vggt     100.0            36.8            70.4            29.1            50.6            65.5               49.4            52.3     0.3 22
+  random       5            vggtba     100.0            46.0            63.6            21.2            41.1            55.4               39.7            43.6    13.7 22
+  random       5         vggtba_ds     100.0            46.0            63.6            23.6            42.4            56.1               41.1            44.5    13.7 22
+  random       5               da3     100.0            50.5            82.7            37.9            60.1            74.3               58.4            62.4     0.9 22
+  random       5             da3ba     100.0            58.7            83.9            34.6            59.1            74.0               57.6            61.2    11.0 22
+  random       5          da3ba_ds     100.0            58.7            83.9            35.7            59.0            73.8               57.4            61.2    11.0 22
+  random       5      hybrid_da3ba     100.0            58.7            83.9            18.4            24.8            29.1               93.1            16.1   111.4 22
+  random       5 hybrid_da3ba_fill     100.0            58.7            83.9            35.9            56.4            68.2               64.8            55.9   111.4 22
+  random      10            colmap      65.0            30.6            40.6            17.6            30.5            39.9               86.1            20.4   159.5 22
+  random      10     colmap_radial      62.7            40.1            41.0            35.6            45.5            51.0               93.3            33.4   212.6 22
+  random      10              vggt     100.0            32.8            72.6            28.7            51.2            66.5               46.3            58.6     0.5 22
+  random      10            vggtba     100.0            52.6            76.4            24.2            46.5            62.3               41.8            53.5    25.3 22
+  random      10         vggtba_ds     100.0            52.6            76.4            27.5            47.7            61.1               44.1            53.0    25.3 22
+  random      10               da3     100.0            51.2            86.3            44.7            68.1            81.2               64.2            73.7     1.5 22
+  random      10             da3ba     100.0            70.9            91.1            42.9            68.9            81.5               65.1            73.8    36.3 22
+  random      10          da3ba_ds     100.0            70.9            91.1            41.3            64.7            77.5               61.7            68.7    36.3 22
+  random      10      hybrid_da3ba     100.0            70.9            91.1            32.9            45.0            52.2               89.3            32.5   271.2 22
+  random      10 hybrid_da3ba_fill     100.0            70.9            91.1            37.4            59.8            72.5               54.5            68.7   271.2 22
+  random      20            colmap      82.9            41.0            62.0            19.6            36.8            47.4               82.7            24.4   452.1 12
+  random      20     colmap_radial      83.3            67.9            70.0            44.8            61.1            69.3               96.6            46.7   876.7 12
+  random      20              vggt     100.0            44.6            84.5            30.5            54.2            71.3               46.5            68.1     1.0 12
+  random      20            vggtba     100.0            80.5            89.9            27.9            52.1            70.0               43.7            68.2   109.1 12
+  random      20         vggtba_ds     100.0            80.5            89.9            30.8            54.5            71.2               46.2            68.4   109.1 12
+  random      20               da3     100.0            58.8            90.7            44.8            69.9            84.5               62.4            81.7     3.1 12
+  random      20             da3ba     100.0            90.0            96.9            43.8            71.6            85.0               64.8            81.8   116.1 12
+  random      20          da3ba_ds     100.0            90.0            96.9            45.5            71.6            84.4               64.8            81.5   116.1 12
+  random      20      hybrid_da3ba     100.0            90.0            96.9            40.8            56.0            65.4               90.3            42.1   641.1 12
+  random      20 hybrid_da3ba_fill     100.0            90.0            96.9            39.9            65.1            77.5               56.2            80.8   641.1 12
 ```
 
 All cases:
 
 ```
-        reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s
-method                                                                                                                                     
-colmap      77.6            46.6            61.6            19.4            33.0            42.8               75.4            23.1   240.6
-vggt       100.0            43.4            78.2            36.7            59.8            73.5               55.9            66.0     0.5
-da3        100.0            57.4            87.3            47.3            70.8            83.2               66.7            76.7     1.7
+                   reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s
+method                                                                                                                                                
+colmap                 80.5            48.0            63.6            20.5            34.1            43.6               77.5            23.9   231.3
+colmap_radial          81.4            67.2            70.3            40.1            51.7            57.8               88.5            39.9   378.9
+vggt                  100.0            45.9            81.2            38.9            63.1            77.1               59.0            69.4     0.5
+vggtba                100.0            76.3            86.7            34.3            58.6            73.2               53.4            67.2    49.1
+vggtba_ds             100.0            76.3            86.7            38.0            61.5            75.0               56.7            68.6    49.1
+da3                   100.0            58.7            89.4            49.1            73.3            85.8               68.9            79.3     1.6
+da3ba                 100.0            84.2            94.8            46.9            73.1            85.7               68.6            79.3    55.1
+da3ba_ds              100.0            84.2            94.8            48.0            72.7            84.7               68.6            78.2    55.1
+hybrid_da3ba          100.0            84.2            94.8            40.4            52.8            59.7               94.1            40.3   318.4
+hybrid_da3ba_fill     100.0            84.2            94.8            44.2            67.2            78.7               62.8            76.9   318.4
 ```
 
 ## Subsets, sparse methods only (more cases while the dense stage is missing)
 
-180 cases with all of: colmap, vggt, da3 (values in %, time in s)
+180 cases with all of: colmap, colmap_radial, vggt, vggtba, da3, da3ba (values in %, time in s)
 
 ```
-sampling n_views method  reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s  n
-neighbor       5 colmap      92.1            63.9            81.4            22.0            36.6            46.8               75.0            26.2   108.0 33
-neighbor       5   vggt     100.0            63.6            91.2            52.3            76.5            87.7               74.3            79.2     0.3 33
-neighbor       5    da3     100.0            68.0            93.2            55.2            79.7            90.8               76.3            83.9     0.9 33
-neighbor      10 colmap      96.7            69.8            88.4            29.3            46.5            58.0               85.5            33.9   252.6 33
-neighbor      10   vggt     100.0            52.9            84.9            47.0            72.1            84.1               68.3            77.0     0.5 33
-neighbor      10    da3     100.0            64.3            92.4            55.5            79.6            90.8               75.2            85.1     1.6 33
-neighbor      20 colmap      95.8            64.0            83.2            26.2            44.5            57.3               85.0            32.0   579.9 24
-neighbor      20   vggt     100.0            40.5            81.7            36.0            61.1            77.0               54.2            72.4     1.0 24
-neighbor      20    da3     100.0            57.1            91.1            49.1            74.2            87.3               67.5            84.3     3.3 24
-  random       5 colmap      43.0            16.8            23.5             6.8            10.7            14.4               48.4             6.8    49.7 33
-  random       5   vggt     100.0            30.5            60.3            24.2            42.8            55.4               42.9            44.0     0.3 33
-  random       5    da3     100.0            44.7            73.0            34.9            54.4            66.7               54.0            55.7     0.9 33
-  random      10 colmap      62.4            27.6            37.9            15.4            27.8            37.5               81.4            18.2   152.0 33
-  random      10   vggt     100.0            33.1            73.9            29.6            52.8            68.2               47.9            59.9     0.5 33
-  random      10    da3     100.0            53.8            87.8            44.8            68.9            81.8               64.9            74.3     1.6 33
-  random      20 colmap      81.2            40.5            61.1            17.9            36.0            48.4               81.4            24.0   451.5 24
-  random      20   vggt     100.0            37.1            78.1            28.7            51.7            68.1               44.4            65.1     1.0 24
-  random      20    da3     100.0            56.0            87.3            44.1            68.3            82.4               61.3            79.6     3.1 24
+sampling n_views        method  reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s  n
+neighbor       5        colmap      92.1            63.9            81.4            22.0            36.6            46.8               75.0            26.2   108.0 33
+neighbor       5 colmap_radial      93.9            86.5            91.0            44.1            55.5            61.6               88.1            43.0   192.6 33
+neighbor       5          vggt     100.0            63.6            91.2            52.3            76.5            87.7               74.3            79.2     0.3 33
+neighbor       5        vggtba     100.0            95.9            99.3            48.9            74.8            86.2               70.7            80.2    16.0 33
+neighbor       5           da3     100.0            68.0            93.2            55.2            79.7            90.8               76.3            83.9     0.9 33
+neighbor       5         da3ba     100.0            96.2            99.3            54.6            80.2            91.4               76.2            85.3    19.9 33
+neighbor      10        colmap      96.7            69.8            88.4            29.3            46.5            58.0               85.5            33.9   252.6 33
+neighbor      10 colmap_radial      97.3            90.1            93.7            50.1            65.1            72.7               95.1            51.5   393.2 33
+neighbor      10          vggt     100.0            52.9            84.9            47.0            72.1            84.1               68.3            77.0     0.5 33
+neighbor      10        vggtba     100.0            88.6            94.0            42.5            68.8            82.0               63.2            76.9    57.3 33
+neighbor      10           da3     100.0            64.3            92.4            55.5            79.6            90.8               75.2            85.1     1.6 33
+neighbor      10         da3ba     100.0            95.2            99.1            55.1            80.9            91.2               76.2            86.9    44.4 33
+neighbor      20        colmap      95.8            64.0            83.2            26.2            44.5            57.3               85.0            32.0   579.9 24
+neighbor      20 colmap_radial      98.1            92.7            95.7            50.1            67.3            75.5               95.0            54.7   895.6 24
+neighbor      20          vggt     100.0            40.5            81.7            36.0            61.1            77.0               54.2            72.4     1.0 24
+neighbor      20        vggtba     100.0            93.4            97.7            31.8            57.0            74.6               48.6            72.8   130.2 24
+neighbor      20           da3     100.0            57.1            91.1            49.1            74.2            87.3               67.5            84.3     3.3 24
+neighbor      20         da3ba     100.0            96.2            99.3            48.0            75.3            88.7               68.7            85.6   162.1 24
+  random       5        colmap      43.0            16.8            23.5             6.8            10.7            14.4               48.4             6.8    49.7 33
+  random       5 colmap_radial      44.8            23.3            26.0            13.5            17.6            20.8               57.3            11.7    85.4 33
+  random       5          vggt     100.0            30.5            60.3            24.2            42.8            55.4               42.9            44.0     0.3 33
+  random       5        vggtba     100.0            38.2            54.1            18.6            35.1            47.1               35.1            36.8    12.1 33
+  random       5           da3     100.0            44.7            73.0            34.9            54.4            66.7               54.0            55.7     0.9 33
+  random       5         da3ba     100.0            49.6            73.0            30.6            52.0            65.1               51.5            53.3     9.7 33
+  random      10        colmap      62.4            27.6            37.9            15.4            27.8            37.5               81.4            18.2   152.0 33
+  random      10 colmap_radial      63.0            41.4            42.5            34.2            44.7            50.5               91.8            32.2   216.0 33
+  random      10          vggt     100.0            33.1            73.9            29.6            52.8            68.2               47.9            59.9     0.5 33
+  random      10        vggtba     100.0            53.5            76.3            22.1            43.5            59.1               38.8            50.3    24.7 33
+  random      10           da3     100.0            53.8            87.8            44.8            68.9            81.8               64.9            74.3     1.6 33
+  random      10         da3ba     100.0            74.4            91.4            42.1            66.9            79.2               63.3            71.7    33.1 33
+  random      20        colmap      81.2            40.5            61.1            17.9            36.0            48.4               81.4            24.0   451.5 24
+  random      20 colmap_radial      81.5            65.8            67.6            46.1            62.7            70.6               96.9            48.4   729.9 24
+  random      20          vggt     100.0            37.1            78.1            28.7            51.7            68.1               44.4            65.1     1.0 24
+  random      20        vggtba     100.0            72.6            86.2            25.7            48.9            66.5               40.9            64.4   108.2 24
+  random      20           da3     100.0            56.0            87.3            44.1            68.3            82.4               61.3            79.6     3.1 24
+  random      20         da3ba     100.0            83.9            93.1            43.8            70.8            83.8               64.4            80.6   113.8 24
 ```
 
 All cases:
 
 ```
-        reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s
-method                                                                                                                                     
-colmap      77.6            46.6            61.6            19.4            33.0            42.8               75.4            23.1   240.6
-vggt       100.0            43.4            78.2            36.7            59.8            73.5               55.9            66.0     0.5
-da3        100.0            57.4            87.3            47.3            70.8            83.2               66.7            76.7     1.7
+               reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s
+method                                                                                                                                            
+colmap             77.6            46.6            61.6            19.4            33.0            42.8               75.4            23.1   240.6
+colmap_radial      78.8            65.4            68.2            38.8            50.9            57.2               86.5            39.1   379.4
+vggt              100.0            43.4            78.2            36.7            59.8            73.5               55.9            66.0     0.5
+vggtba            100.0            72.8            83.8            31.9            54.9            69.1               50.0            63.1    52.0
+da3               100.0            57.4            87.3            47.3            70.8            83.2               66.7            76.7     1.7
+da3ba             100.0            81.8            92.2            45.7            70.8            82.9               66.7            76.6    56.4
 ```
 
 ## All views
 
-11 cases with all of: colmap, vggt, da3 (values in %, time in s)
+11 cases with all of: colmap, colmap_radial, vggt, vggtba, vggtba_ds, da3, da3ba, da3ba_ds, hybrid_da3ba, hybrid_da3ba_fill (values in %, time in s)
 
 ```
-sampling n_views method  reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s  n
-     all     all colmap      98.9            70.4            91.3            31.0            51.8            63.9               82.5            40.0  1153.9 11
-     all     all   vggt     100.0            43.5            81.7            36.3            61.3            78.4               52.2            79.3    29.9 11
-     all     all    da3     100.0            63.1            91.1            51.1            76.5            88.8               68.2            89.5     4.8 11
+sampling n_views            method  reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s  n
+     all     all            colmap      98.9            70.4            91.3            31.0            51.8            63.9               82.5            40.0  1153.9 11
+     all     all     colmap_radial      98.7            95.2            97.1            59.7            75.6            83.0               95.2            65.4  1148.4 11
+     all     all              vggt     100.0            43.5            81.7            36.3            61.3            78.4               52.2            79.3    29.9 11
+     all     all            vggtba     100.0            92.1            97.4            30.9            58.4            77.8               48.0            79.7   273.5 11
+     all     all         vggtba_ds     100.0            92.1            97.4            40.7            67.7            83.7               58.0            84.8   273.5 11
+     all     all               da3     100.0            63.1            91.1            51.1            76.5            88.8               68.2            89.5     4.8 11
+     all     all             da3ba     100.0            95.3            97.8            51.5            77.5            89.0               69.9            89.3   276.5 11
+     all     all          da3ba_ds     100.0            95.3            97.8            53.3            79.3            90.3               71.7            90.7   276.5 11
+     all     all      hybrid_da3ba     100.0            95.3            97.8            59.2            75.3            82.8               95.2            65.0  1320.3 11
+     all     all hybrid_da3ba_fill     100.0            95.3            97.8            44.4            70.8            82.1               59.0            92.8  1320.3 11
 ```
 
 All cases:
 
 ```
-        reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s
-method                                                                                                                                     
-colmap      98.9            70.4            91.3            31.0            51.8            63.9               82.5            40.0  1153.9
-vggt       100.0            43.5            81.7            36.3            61.3            78.4               52.2            79.3    29.9
-da3        100.0            63.1            91.1            51.1            76.5            88.8               68.2            89.5     4.8
+                   reg_rate  posefail_auc05  posefail_auc30  fscore_pc@0.02  fscore_pc@0.05  fscore_pc@0.10  precision_pc@0.05  recall_pc@0.05  time_s
+method                                                                                                                                                
+colmap                 98.9            70.4            91.3            31.0            51.8            63.9               82.5            40.0  1153.9
+colmap_radial          98.7            95.2            97.1            59.7            75.6            83.0               95.2            65.4  1148.4
+vggt                  100.0            43.5            81.7            36.3            61.3            78.4               52.2            79.3    29.9
+vggtba                100.0            92.1            97.4            30.9            58.4            77.8               48.0            79.7   273.5
+vggtba_ds             100.0            92.1            97.4            40.7            67.7            83.7               58.0            84.8   273.5
+da3                   100.0            63.1            91.1            51.1            76.5            88.8               68.2            89.5     4.8
+da3ba                 100.0            95.3            97.8            51.5            77.5            89.0               69.9            89.3   276.5
+da3ba_ds              100.0            95.3            97.8            53.3            79.3            90.3               71.7            90.7   276.5
+hybrid_da3ba          100.0            95.3            97.8            59.2            75.3            82.8               95.2            65.0  1320.3
+hybrid_da3ba_fill     100.0            95.3            97.8            44.4            70.8            82.1               59.0            92.8  1320.3
 ```
 
 ## Per-case comparisons (subsets first, then all views)
 
+- da3ba vs da3 (posefail_auc05, 180 cases): better 152, tie 13, worse 15; mean diff +24.4
+- vggtba vs vggt (posefail_auc05, 180 cases): better 154, tie 15, worse 11; mean diff +29.4
+- da3ba vs colmap_radial (posefail_auc05, 180 cases): better 103, tie 57, worse 20; mean diff +16.4
+- colmap_radial vs colmap (posefail_auc05, 180 cases): better 149, tie 29, worse 2; mean diff +18.8
+- hybrid_da3ba_fill vs da3 (fscore_pc@0.02, 123 cases): better 36, tie 3, worse 84; mean diff -4.9
+- da3ba vs da3 (posefail_auc05, 11 cases): better 11, tie 0, worse 0; mean diff +32.2
+- vggtba vs vggt (posefail_auc05, 11 cases): better 11, tie 0, worse 0; mean diff +48.7
+- da3ba vs colmap_radial (posefail_auc05, 11 cases): better 3, tie 4, worse 4; mean diff +0.1
+- colmap_radial vs colmap (posefail_auc05, 11 cases): better 11, tie 0, worse 0; mean diff +24.8
+- hybrid_da3ba_fill vs da3 (fscore_pc@0.02, 11 cases): better 4, tie 0, worse 7; mean diff -6.7
 
 ## Exploration set (13 cases)
 
 ```
-                                             fscore_pc@0.02             posefail_auc05            
-method                                               colmap   da3  vggt         colmap   da3  vggt
-group         scene         sampling n_views                                                      
-colmap_better facade        neighbor 10                12.9  42.7  27.4           83.6  46.7  42.2
-              kicker        neighbor 20                28.8  56.8  63.8           92.7  62.0  71.5
-              relief        neighbor 5                 50.7  60.5  58.4           64.0  20.0  54.0
-              relief_2      neighbor 5                 34.1  51.7  54.4           90.0  52.0  60.0
-colmap_fails  courtyard     random   5                  0.0  18.7   7.3            0.0  46.0  30.0
-              delivery_area random   20                18.1  26.2  18.7           14.9  47.1  21.2
-              electro       random   10                11.7  32.7  21.6            8.0  61.8  43.6
-              playground    neighbor 5                  0.0  29.8  35.6            0.0  44.0  42.0
-                            random   20                34.0  39.3  24.1           28.1  28.9  34.0
-              terrains      random   10                 5.2  84.8  62.2           14.2  89.8  36.9
-da3_good      courtyard     neighbor 5                 35.9  57.7  46.7           62.0  96.0  74.0
-              office        neighbor 5                 36.8  76.6  85.5           98.0  86.0  82.0
-              pipes         neighbor 10                29.7  72.0  52.8           67.1  75.6  68.0
+                                             fscore_pc@0.02                                                                            posefail_auc05                                                                            
+method                                               colmap   da3 da3ba da3ba_ds hybrid_da3ba hybrid_da3ba_fill  vggt vggtba vggtba_ds         colmap   da3  da3ba da3ba_ds hybrid_da3ba hybrid_da3ba_fill  vggt vggtba vggtba_ds
+group         scene         sampling n_views                                                                                                                                                                                     
+colmap_better facade        neighbor 10                12.9  42.7  37.6     39.1         37.2              39.7  27.4   27.7      28.0           83.6  46.7   84.4     84.4         84.4              84.4  42.2   84.4      84.4
+              kicker        neighbor 20                28.8  56.8  63.5     73.3          NaN               NaN  63.8   62.3      68.3           92.7  62.0   98.7     98.7          NaN               NaN  71.5   98.4      98.4
+              relief        neighbor 5                 50.7  60.5  38.2     70.9         84.5              75.1  58.4   60.4      59.6           64.0  20.0   96.0     96.0         96.0              96.0  54.0   96.0      96.0
+              relief_2      neighbor 5                 34.1  51.7  58.5     59.9         61.2              41.7  54.4   60.5      58.8           90.0  52.0  100.0    100.0        100.0             100.0  60.0  100.0     100.0
+colmap_fails  courtyard     random   5                  0.0  18.7  13.7     14.8          NaN               NaN   7.3    5.5      10.1            0.0  46.0   54.0     54.0          NaN               NaN  30.0   54.0      54.0
+              delivery_area random   20                18.1  26.2  24.6     26.1          NaN               NaN  18.7   14.1       9.6           14.9  47.1   44.7     44.7          NaN               NaN  21.2   27.4      27.4
+              electro       random   10                11.7  32.7  38.0     18.2          NaN               NaN  21.6   22.2      22.6            8.0  61.8   86.2     86.2          NaN               NaN  43.6   75.1      75.1
+              playground    neighbor 5                  0.0  29.8  37.6     36.8         61.9              22.1  35.6   38.8      38.5            0.0  44.0  100.0    100.0        100.0             100.0  42.0  100.0     100.0
+                            random   20                34.0  39.3  44.6     32.8         56.0              23.0  24.1   26.3      24.0           28.1  28.9   99.3     99.3         99.3              99.3  34.0   98.9      98.9
+              terrains      random   10                 5.2  84.8  78.7     80.5         44.3              76.6  62.2   38.1      62.2           14.2  89.8  100.0    100.0        100.0             100.0  36.9  100.0     100.0
+da3_good      courtyard     neighbor 5                 35.9  57.7  59.1     64.3         69.4              69.0  46.7   54.5      57.3           62.0  96.0   96.0     96.0         96.0              96.0  74.0   96.0      96.0
+              office        neighbor 5                 36.8  76.6  74.8     70.1         45.0              71.3  85.5   83.6      83.9           98.0  86.0  100.0    100.0        100.0             100.0  82.0  100.0     100.0
+              pipes         neighbor 10                29.7  72.0  61.0     61.8         46.2              55.7  52.8   53.5      60.1           67.1  75.6  100.0    100.0        100.0             100.0  68.0  100.0     100.0
 ```

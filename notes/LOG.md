@@ -257,3 +257,38 @@ Fairness consequence: the COLMAP baseline is handicapped by the same model -> co
 camera model RADIAL) runs on all 1027-main subsets and all views (configs/1113-main.yaml, 1113-allviews.yaml,
 started 11/13 ~16:00 UTC, scripts/launch_1113_colmap_radial.sh). DA3-BA / VGGT-BA sparse stage on the same
 cases: scripts/launch_1113_ba.sh.
+
+## 11/14 05:45 OOM re-run (graph-mining GPU conflict)
+- A graph-mining job (~36 GB on GPU1 from 03:43) made COLMAP-RADIAL shard 1 hit CUDA OOM in SIFT extraction at 03:54-03:56.
+  False failures (0 registered): 1113-main playground random 20 views s2, and 1113-allviews relief_2, pipes, office, electro,
+  delivery_area (all views). No OOM lines anywhere else in the shard logs; shard 0 clean.
+- Failed outputs moved to runs/_oom_failed_20261114/; finish_1113.sh paused with SIGSTOP (stage-1 main evaluation kept running);
+  scripts/rerun_1114_oom_cases.sh re-runs the 6 cases (main on GPU0, allviews on GPU1, logs colmap_radial_rerun_1114.log)
+  and sends SIGCONT to finish_1113.sh afterwards, so the allviews evaluation, the dense stage and eval_all use the re-run results.
+- The stage-1 main evaluation started before the move, so the stage-1 summary still counts playground v20_s2 as a failure;
+  eval_all at the end recomputes it.
+- COLMAP-RADIAL / BA sparse runtimes after 11/13 ~17:25 shared the GPUs with graph-mining jobs (wall time possibly inflated;
+  peak_gpu_gb is per-process and unaffected).
+
+## 11/15 Results of the 11/13 runs (results/1113-summary.md; verified from metrics.csv)
+
+All sparse methods complete: 180 subsets + 11 all-view cases for colmap_radial, da3ba(_ds), vggtba(_ds); the 6 OOM
+cases were re-run and are in the final metrics (e.g. playground random-20 s2: 12/20 registered).
+Pose AUC@5 (failures counted), means over all 180 subsets / all views:
+- COLMAP 46.6 / 70.4, COLMAP-RADIAL 65.4 / 95.2, VGGT 43.4 / 43.5, VGGT-BA 72.8 / 92.1, DA3 57.4 / 63.1, DA3-BA 81.8 / 95.3.
+- Per case, DA3-BA vs DA3: better 152, tie 13, worse 15 (of 180); 11/11 with all views. VGGT-BA vs VGGT 154/15/11.
+  DA3-BA vs COLMAP-RADIAL: 103/57/20 on subsets, 3/4/4 with all views (mean +0.1): with dense views the classical
+  pipeline with the right camera model is as good; DA3-BA's gain is for sparse / low-overlap inputs.
+- Neighbor subsets: DA3-BA 95-96 vs COLMAP-RADIAL 86.5-92.7. Random-5: DA3-BA 49.6 vs DA3 44.7 (smallest gain).
+Geometry:
+- COLMAP-RADIAL vs COLMAP: F@5 33.0 -> 50.9 (subsets), 51.8 -> 75.6 (all views); precision@5 95%. With all views
+  COLMAP-RADIAL has the best F@2 (59.7 vs DA3 51.1) and ties DA3 at F@5 (75.6 vs 76.5): the v1 conclusion "DA3 best
+  geometry everywhere" holds only against default COLMAP and must be revised.
+- DA3-BA depth: F@2/5 unchanged (47.3/70.8 vs DA3 45.7/70.8 subsets; da3ba_ds 53.3/79.3 vs 51.1/76.5 all views).
+  VGGT-BA (global scale) loses F@2 (36.7 -> 31.9); per-view scale (vggtba_ds) recovers it with all views (40.7).
+- Dense stage on DA3-BA cameras (negative): hybrid_da3ba (MVS only) ~ COLMAP-RADIAL (all views F@2 59.2 vs 59.7);
+  hybrid_da3ba_fill vs DA3 F@2: better 36 / worse 84 of 123 subsets (mean -4.9), 4/7 with all views (-6.7).
+  Dense stage incomplete on subsets (124/181): one shard aborted on a COLMAP CHECK (PatchMatch without depth range,
+  empty sparse model), the other on an Open3D voxel error in the completion; not re-run (result already negative).
+- Runtimes of the 11/13 runs are inflated (GPUs shared with graph-mining jobs from 11/13 ~17:25); use 1028-efficiency
+  for runtime, and DA3-BA's own time_s breakdown (features_matching, ba) only as an order of magnitude.
