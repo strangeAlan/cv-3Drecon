@@ -676,18 +676,18 @@ feed-forward model and by the incompleteness of multi-view stereo.
 \bibliography{refs}
 }
 
-\clearpage
+\onecolumn
 \appendix
 \section{Full results}
 
-\begin{table*}[t]
+\begin{table}[h]
 \centering
 \input{tables/tab_main.tex}
 \caption{All metrics per setting (\%). $N$: number of reconstructions. Reg.: share of registered images.
 AUC@5/30: relative pose accuracy with unregistered images counted as failures. F, P, R: F-score, precision and
 recall of the point cloud at 2, 5 and 10\,cm; failed reconstructions count as zero. Best per setting in bold.}
 \label{tab:main}
-\end{table*}
+\end{table}
 
 Table~\ref{tab:main} lists all metrics for every setting.
 
