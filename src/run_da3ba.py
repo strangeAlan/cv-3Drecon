@@ -31,6 +31,7 @@ Outputs: runs/<run>/da3ba and runs/<run>/da3ba_ds in the common case format (fee
 depth on the DA3 grid, pinhole intrinsics), evaluated by evaluate.py like VGGT/DA3; with --dense
 also hybrid_da3ba (fused MVS cloud) and hybrid_da3ba_fill (MVS + DA3-BA fill), COLMAP style.
 
+Ablation: da3ba.init: triangulate starts from COLMAP's triangulation with the DA3 cameras instead of lifting.
 With da3ba.ff_method: vggt the same refinement runs on VGGT's predictions (outputs vggtba, vggtba_ds).
 
 Usage: python src/run_da3ba.py configs/<run>.yaml [--shard i/n] [--dense]
@@ -217,13 +218,17 @@ def run_case(work, case, gt, ff, ccfg, bcfg):
     view_of = {images[n].image_id: i for i, n in enumerate(names)}
     wh = {images[n].image_id: (cameras[images[n].camera_id].width, cameras[images[n].camera_id].height) for n in names}
     tracks = build_tracks(matches)
-    lifted = lift(tracks, keypoints, ff, view_of, wh, bcfg["lift_tol"])
     rec = init_reconstruction(images, cameras, keypoints, ff, names)
-    for xyz, track in lifted:
-        rec.add_point3D(xyz, pycolmap.Track([pycolmap.TrackElement(i, k) for i, k in track]))
-    log.update(n_tracks=len(tracks), n_points_init=len(lifted),
-               init_err_median=float(np.median([o[3] for o in observations(rec)])) if lifted else None)
-    ok = len(lifted) >= bcfg["min_points"]
+    if bcfg.get("init", "lift") == "lift":
+        lifted = lift(tracks, keypoints, ff, view_of, wh, bcfg["lift_tol"])
+        for xyz, track in lifted:
+            rec.add_point3D(xyz, pycolmap.Track([pycolmap.TrackElement(i, k) for i, k in track]))
+    else:  # ablation "triangulate": COLMAP triangulation with the DA3 cameras (the 10/27 hybrid's start)
+        rec = pycolmap.triangulate_points(rec, db, image_dir, work / "tri0", clear_points=True)
+    n_init = rec.num_points3D()
+    log.update(n_tracks=len(tracks), n_points_init=n_init,
+               init_err_median=float(np.median([o[3] for o in observations(rec)])) if n_init else None)
+    ok = n_init >= bcfg["min_points"]
     intr = (bcfg.get("refine_focal", True), bcfg.get("refine_distortion", True))
     if ok:
         rounds = []
@@ -361,7 +366,8 @@ def main():
                     "refined_view": strong.tolist(), "depth_scale": scale.tolist(),
                     "peak_gpu_gb": mem.peak_gb, "config": bcfg, **log}
             save_case(o, ff["depth"] * scale[:, None, None], E[:, :3, :4], K, gt, info)
-        shutil.rmtree(out / "colmap_work" / "tri", ignore_errors=True)
+        for d in ("tri", "tri0"):
+            shutil.rmtree(out / "colmap_work" / d, ignore_errors=True)
         (out / "colmap_work" / "database.db").unlink(missing_ok=True)
         if rec is not None:  # final sparse model, input of the dense stage
             (out / "colmap_work" / "sparse").mkdir(exist_ok=True)

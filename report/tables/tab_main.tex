@@ -2,32 +2,46 @@
 \toprule
 Views & Sampling & $N$ & Method & Reg. & AUC@5 & AUC@30 & F@2 & F@5 & F@10 & P@5 & R@5 \\
 \midrule
-\multirow{3}{*}{5} & \multirow{3}{*}{neighbor} & \multirow{3}{*}{33} & COLMAP & 92.1 & 63.9 & 81.4 & 22.0 & 36.6 & 46.8 & 75.0 & 26.2 \\
+\multirow{5}{*}{5} & \multirow{5}{*}{neighbor} & \multirow{5}{*}{33} & COLMAP & 92.1 & 63.9 & 81.4 & 22.0 & 36.6 & 46.8 & 75.0 & 26.2 \\
+ & &  & COLMAP-R & 93.9 & 86.5 & 91.0 & 44.1 & 55.5 & 61.6 & \textbf{88.1} & 43.0 \\
  & &  & VGGT & \textbf{100.0} & 63.6 & 91.2 & 52.3 & 76.5 & 87.7 & 74.3 & 79.2 \\
- & &  & DA3 & \textbf{100.0} & \textbf{68.0} & \textbf{93.2} & \textbf{55.2} & \textbf{79.7} & \textbf{90.8} & \textbf{76.3} & \textbf{83.9} \\
+ & &  & DA3 & \textbf{100.0} & 68.0 & 93.2 & \textbf{55.2} & 79.7 & 90.8 & 76.3 & 83.9 \\
+ & &  & DA3-BA & \textbf{100.0} & \textbf{96.2} & \textbf{99.3} & 54.6 & \textbf{80.2} & \textbf{91.4} & 76.2 & \textbf{85.3} \\
 \midrule
-\multirow{3}{*}{5} & \multirow{3}{*}{random} & \multirow{3}{*}{33} & COLMAP & 43.0 & 16.8 & 23.5 & 6.8 & 10.7 & 14.4 & 48.4 & 6.8 \\
- & &  & VGGT & \textbf{100.0} & 30.5 & 60.3 & 24.2 & 42.8 & 55.4 & 42.9 & 44.0 \\
- & &  & DA3 & \textbf{100.0} & \textbf{44.7} & \textbf{73.0} & \textbf{34.9} & \textbf{54.4} & \textbf{66.7} & \textbf{54.0} & \textbf{55.7} \\
-\midrule
-\multirow{3}{*}{10} & \multirow{3}{*}{neighbor} & \multirow{3}{*}{33} & COLMAP & 96.7 & \textbf{69.8} & 88.4 & 29.3 & 46.5 & 58.0 & \textbf{85.5} & 33.9 \\
+\multirow{5}{*}{10} & \multirow{5}{*}{neighbor} & \multirow{5}{*}{33} & COLMAP & 96.7 & 69.8 & 88.4 & 29.3 & 46.5 & 58.0 & 85.5 & 33.9 \\
+ & &  & COLMAP-R & 97.3 & 90.1 & 93.7 & 50.1 & 65.1 & 72.7 & \textbf{95.1} & 51.5 \\
  & &  & VGGT & \textbf{100.0} & 52.9 & 84.9 & 47.0 & 72.1 & 84.1 & 68.3 & 77.0 \\
- & &  & DA3 & \textbf{100.0} & 64.3 & \textbf{92.4} & \textbf{55.5} & \textbf{79.6} & \textbf{90.8} & 75.2 & \textbf{85.1} \\
+ & &  & DA3 & \textbf{100.0} & 64.3 & 92.4 & \textbf{55.5} & 79.6 & 90.8 & 75.2 & 85.1 \\
+ & &  & DA3-BA & \textbf{100.0} & \textbf{95.2} & \textbf{99.1} & 55.1 & \textbf{80.9} & \textbf{91.2} & 76.2 & \textbf{86.9} \\
 \midrule
-\multirow{3}{*}{10} & \multirow{3}{*}{random} & \multirow{3}{*}{33} & COLMAP & 62.4 & 27.6 & 37.9 & 15.4 & 27.8 & 37.5 & \textbf{81.4} & 18.2 \\
- & &  & VGGT & \textbf{100.0} & 33.1 & 73.9 & 29.6 & 52.8 & 68.2 & 47.9 & 59.9 \\
- & &  & DA3 & \textbf{100.0} & \textbf{53.8} & \textbf{87.8} & \textbf{44.8} & \textbf{68.9} & \textbf{81.8} & 64.9 & \textbf{74.3} \\
-\midrule
-\multirow{3}{*}{20} & \multirow{3}{*}{neighbor} & \multirow{3}{*}{24} & COLMAP & 95.8 & \textbf{64.0} & 83.2 & 26.2 & 44.5 & 57.3 & \textbf{85.0} & 32.0 \\
+\multirow{5}{*}{20} & \multirow{5}{*}{neighbor} & \multirow{5}{*}{24} & COLMAP & 95.8 & 64.0 & 83.2 & 26.2 & 44.5 & 57.3 & 85.0 & 32.0 \\
+ & &  & COLMAP-R & 98.1 & 92.7 & 95.7 & \textbf{50.1} & 67.3 & 75.5 & \textbf{95.0} & 54.7 \\
  & &  & VGGT & \textbf{100.0} & 40.5 & 81.7 & 36.0 & 61.1 & 77.0 & 54.2 & 72.4 \\
- & &  & DA3 & \textbf{100.0} & 57.1 & \textbf{91.1} & \textbf{49.1} & \textbf{74.2} & \textbf{87.3} & 67.5 & \textbf{84.3} \\
+ & &  & DA3 & \textbf{100.0} & 57.1 & 91.1 & 49.1 & 74.2 & 87.3 & 67.5 & 84.3 \\
+ & &  & DA3-BA & \textbf{100.0} & \textbf{96.2} & \textbf{99.3} & 48.0 & \textbf{75.3} & \textbf{88.7} & 68.7 & \textbf{85.6} \\
 \midrule
-\multirow{3}{*}{20} & \multirow{3}{*}{random} & \multirow{3}{*}{24} & COLMAP & 81.2 & 40.5 & 61.1 & 17.9 & 36.0 & 48.4 & \textbf{81.4} & 24.0 \\
+\multirow{5}{*}{5} & \multirow{5}{*}{random} & \multirow{5}{*}{33} & COLMAP & 43.0 & 16.8 & 23.5 & 6.8 & 10.7 & 14.4 & 48.4 & 6.8 \\
+ & &  & COLMAP-R & 44.8 & 23.3 & 26.0 & 13.5 & 17.6 & 20.8 & \textbf{57.3} & 11.7 \\
+ & &  & VGGT & \textbf{100.0} & 30.5 & 60.3 & 24.2 & 42.8 & 55.4 & 42.9 & 44.0 \\
+ & &  & DA3 & \textbf{100.0} & 44.7 & 73.0 & \textbf{34.9} & \textbf{54.4} & \textbf{66.7} & 54.0 & \textbf{55.7} \\
+ & &  & DA3-BA & \textbf{100.0} & \textbf{49.6} & \textbf{73.0} & 30.6 & 52.0 & 65.1 & 51.5 & 53.3 \\
+\midrule
+\multirow{5}{*}{10} & \multirow{5}{*}{random} & \multirow{5}{*}{33} & COLMAP & 62.4 & 27.6 & 37.9 & 15.4 & 27.8 & 37.5 & 81.4 & 18.2 \\
+ & &  & COLMAP-R & 63.0 & 41.4 & 42.5 & 34.2 & 44.7 & 50.5 & \textbf{91.8} & 32.2 \\
+ & &  & VGGT & \textbf{100.0} & 33.1 & 73.9 & 29.6 & 52.8 & 68.2 & 47.9 & 59.9 \\
+ & &  & DA3 & \textbf{100.0} & 53.8 & 87.8 & \textbf{44.8} & \textbf{68.9} & \textbf{81.8} & 64.9 & \textbf{74.3} \\
+ & &  & DA3-BA & \textbf{100.0} & \textbf{74.4} & \textbf{91.4} & 42.1 & 66.9 & 79.2 & 63.3 & 71.7 \\
+\midrule
+\multirow{5}{*}{20} & \multirow{5}{*}{random} & \multirow{5}{*}{24} & COLMAP & 81.2 & 40.5 & 61.1 & 17.9 & 36.0 & 48.4 & 81.4 & 24.0 \\
+ & &  & COLMAP-R & 81.5 & 65.8 & 67.6 & \textbf{46.1} & 62.7 & 70.6 & \textbf{96.9} & 48.4 \\
  & &  & VGGT & \textbf{100.0} & 37.1 & 78.1 & 28.7 & 51.7 & 68.1 & 44.4 & 65.1 \\
- & &  & DA3 & \textbf{100.0} & \textbf{56.0} & \textbf{87.3} & \textbf{44.1} & \textbf{68.3} & \textbf{82.4} & 61.3 & \textbf{79.6} \\
+ & &  & DA3 & \textbf{100.0} & 56.0 & 87.3 & 44.1 & 68.3 & 82.4 & 61.3 & 79.6 \\
+ & &  & DA3-BA & \textbf{100.0} & \textbf{83.9} & \textbf{93.1} & 43.8 & \textbf{70.8} & \textbf{83.8} & 64.4 & \textbf{80.6} \\
 \midrule
-\multirow{3}{*}{all} & \multirow{3}{*}{--} & \multirow{3}{*}{11} & COLMAP & 98.9 & \textbf{70.4} & \textbf{91.3} & 31.0 & 51.8 & 63.9 & \textbf{82.5} & 40.0 \\
+\multirow{5}{*}{all} & \multirow{5}{*}{--} & \multirow{5}{*}{11} & COLMAP & 98.9 & 70.4 & 91.3 & 31.0 & 51.8 & 63.9 & 82.5 & 40.0 \\
+ & &  & COLMAP-R & 98.7 & 95.2 & 97.1 & \textbf{59.7} & 75.6 & 83.0 & \textbf{95.2} & 65.4 \\
  & &  & VGGT & \textbf{100.0} & 43.5 & 81.7 & 36.3 & 61.3 & 78.4 & 52.2 & 79.3 \\
- & &  & DA3 & \textbf{100.0} & 63.1 & 91.1 & \textbf{51.1} & \textbf{76.5} & \textbf{88.8} & 68.2 & \textbf{89.5} \\
+ & &  & DA3 & \textbf{100.0} & 63.1 & 91.1 & 51.1 & 76.5 & 88.8 & 68.2 & \textbf{89.5} \\
+ & &  & DA3-BA & \textbf{100.0} & \textbf{95.3} & \textbf{97.8} & 51.5 & \textbf{77.5} & \textbf{89.0} & 69.9 & 89.3 \\
 \bottomrule
 \end{tabular}

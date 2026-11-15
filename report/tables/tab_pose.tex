@@ -1,0 +1,23 @@
+\begin{tabular}{lccccccc}
+\toprule
+ & \multicolumn{3}{c}{Neighbor views} & \multicolumn{3}{c}{Random views} & All \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-8}
+Method & 5 & 10 & 20 & 5 & 10 & 20 & views \\
+\midrule
+\multicolumn{8}{l}{\emph{AUC@5}} \\
+COLMAP & 63.9 & 69.8 & 64.0 & 16.8 & 27.6 & 40.5 & 70.4 \\
+COLMAP-R & 86.5 & 90.1 & 92.7 & 23.3 & 41.4 & 65.8 & 95.2 \\
+VGGT & 63.6 & 52.9 & 40.5 & 30.5 & 33.1 & 37.1 & 43.5 \\
+VGGT-BA & 95.9 & 88.6 & 93.4 & 38.2 & 53.5 & 72.6 & 92.1 \\
+DA3 & 68.0 & 64.3 & 57.1 & 44.7 & 53.8 & 56.0 & 63.1 \\
+DA3-BA & \textbf{96.2} & \textbf{95.2} & \textbf{96.2} & \textbf{49.6} & \textbf{74.4} & \textbf{83.9} & \textbf{95.3} \\
+\midrule
+\multicolumn{8}{l}{\emph{AUC@30}} \\
+COLMAP & 81.4 & 88.4 & 83.2 & 23.5 & 37.9 & 61.1 & 91.3 \\
+COLMAP-R & 91.0 & 93.7 & 95.7 & 26.0 & 42.5 & 67.6 & 97.1 \\
+VGGT & 91.2 & 84.9 & 81.7 & 60.3 & 73.9 & 78.1 & 81.7 \\
+VGGT-BA & 99.3 & 94.0 & 97.7 & 54.1 & 76.3 & 86.2 & 97.4 \\
+DA3 & 93.2 & 92.4 & 91.1 & 73.0 & 87.8 & 87.3 & 91.1 \\
+DA3-BA & \textbf{99.3} & \textbf{99.1} & \textbf{99.3} & \textbf{73.0} & \textbf{91.4} & \textbf{93.1} & \textbf{97.8} \\
+\bottomrule
+\end{tabular}

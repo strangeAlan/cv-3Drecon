@@ -7,6 +7,8 @@
 \usepackage{amssymb}
 \usepackage{multirow}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,calc}
 \definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
 \usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
@@ -20,17 +22,20 @@ COLMAP versus VGGT and Depth Anything 3 on ETH3D}
 \maketitle
 
 \begin{abstract}
-We compare a classical multi-view reconstruction pipeline, COLMAP, with two recent feed-forward models,
-VGGT and Depth Anything 3 (DA3), on the 11 scenes of the ETH3D high-resolution benchmark. We vary the number of
+We compare a classical multi-view reconstruction pipeline, COLMAP, with two recent feed-forward models, VGGT
+and Depth Anything 3 (DA3), on the 11 scenes of the ETH3D high-resolution benchmark. We vary the number of
 input views from 5 to all images of a scene and their overlap, and evaluate camera poses, the accuracy and
 completeness of the dense geometry, runtime and GPU memory with the same images and the same evaluation for
-every method. DA3 gives the best geometry in every setting. COLMAP produces the most accurate points, but it
-reconstructs less than half of the visible surface and often fails when the views overlap little: with five
-random views it registers fewer than half of the images. On the images it does register, its cameras are the most
-accurate, and with all views it gives the best poses overall. More input views improve COLMAP's cameras, while
-the feed-forward models do not gain from additional views on a fixed set of images. The feed-forward models are
-20 to 240 times faster but need up to 3.5 times more GPU memory. An attempt to combine both families did not
-improve on DA3.
+every method. With its default settings, COLMAP is far behind the learned models. A large part of this gap is
+caused by its default camera model, which cannot represent the ETH3D lenses: with a two-parameter radial model,
+COLMAP's pose accuracy rises from 47 to 65 AUC@5 and its F-score at 5\,cm from 33\% to 51\%, and with all views
+it gives the most precise geometry and the best F-score at 2\,cm of all methods. With few or weakly overlapping views, however, COLMAP still
+fails to register many images, while the feed-forward models always return a result but with less accurate
+cameras. We therefore refine the DA3 prediction with classical bundle adjustment: SIFT tracks are lifted to 3D
+with the predicted depth and optimized together with the cameras. This refinement, DA3-BA, raises DA3's pose
+accuracy from 57 to 82 AUC@5, never fails, and gives the best cameras in every setting; applied to VGGT it raises
+AUC@5 from 43 to 73. Better cameras alone do not improve the dense geometry, which remains limited by the
+per-view depth of the feed-forward model.
 \end{abstract}
 
 %-------------------------------------------------------------------------
@@ -44,23 +49,37 @@ COLMAP~\cite{schonberger2016sfm,schonberger2016mvs} is the most widely used impl
 
 Recently, large transformers trained on many 3D datasets have started to solve the same task in a single
 forward pass. VGGT~\cite{wang2025vggt} and Depth Anything 3 (DA3)~\cite{lin2025da3} take a set of unposed
-images and directly predict the camera of every image and a dense depth map for it. They run in about a
-second and never fail to return a result, but they work on images of about 500 pixels width and do not
-optimize the geometry explicitly.
+images and directly predict the camera of every image and a dense depth map for it. They run in seconds and
+never fail to return a result, but they work on images of about 500 pixels width and do not optimize the
+geometry explicitly.
 
 The two families have different strengths and failure modes, and it is not obvious which one to use when
 only a few images are available. In this project we compare them on the same data, the ETH3D high-resolution
 multi-view benchmark~\cite{schops2017eth3d}, and vary two factors that matter in practice: the number of
 input views (5, 10, 20 and all images of a scene) and their overlap (spatially neighboring views versus random
-views). We measure the
-quality of the recovered cameras, the accuracy and the completeness of the geometry, and the runtime.
+views). We measure the quality of the recovered cameras, the accuracy and the completeness of the geometry, the
+runtime and the GPU memory.
 
-DA3 gives the best geometry in every setting and VGGT the second best. COLMAP's points are the most
-accurate, but it covers much less of the surface, and with low-overlap views it often cannot register the images
-at all. Its cameras, in contrast, are the most accurate on the images it registers and the best overall when all
-views are used. More views make COLMAP's cameras better; on a fixed set of views, the feed-forward models do not
-gain from more input views, and VGGT's cameras become worse. The learned models need seconds instead of minutes,
-at the cost of more GPU memory.
+The comparison led to two findings that shaped the second half of the project. First, COLMAP's default camera
+model, a single radial distortion coefficient, cannot represent the ETH3D lenses; the remaining error of up to
+60 pixels is absorbed by wrong focal lengths and poses. With a two-parameter radial model COLMAP becomes much
+stronger, and we use it as a second, fair classical baseline (COLMAP-R). Second, where the classical pipeline
+registers the images its cameras are more accurate than the predicted ones, while the feed-forward models
+never fail. This suggests starting bundle adjustment from the feed-forward prediction. We do so with a
+simple refinement, DA3-BA, which lifts SIFT tracks to 3D with the DA3 depth and refines cameras, intrinsics
+and points coarse to fine.
+
+Our contributions are:
+\begin{itemize}
+\setlength\itemsep{0pt}
+\item A controlled comparison of COLMAP, VGGT and DA3 on ETH3D from 5 views to all views, with high and low
+view overlap, for cameras, geometry, runtime and memory (180 view subsets and 11 full scenes per method).
+\item An analysis of what decides the comparison: the evaluation protocol, the camera model of the classical
+pipeline, and the causes of registration failures.
+\item DA3-BA, a bundle adjustment refinement of the feed-forward prediction, which gives the most accurate
+cameras in every setting (AUC@5 82 against 57 for DA3 and 65 for COLMAP-R), together with an ablation of its
+design and an analysis of where it does not help.
+\end{itemize}
 
 %-------------------------------------------------------------------------
 \section{Related Work}
@@ -68,9 +87,11 @@ at the cost of more GPU memory.
 \paragraph{Classical SfM and MVS.}
 Incremental SfM registers images one by one: it starts from a well-conditioned image pair, adds images by
 solving perspective-n-point problems against already triangulated points, triangulates new points and refines
-everything by bundle adjustment~\cite{schonberger2016sfm}. Dense MVS then estimates a depth map per image.
-PatchMatch-based methods~\cite{schonberger2016mvs} propagate depth and normal hypotheses between neighboring
-pixels and select, per pixel, the source images that see the same surface.
+everything by bundle adjustment~\cite{triggs2000ba,schonberger2016sfm}. Global SfM~\cite{pan2024glomap} instead
+estimates all camera rotations and positions jointly from the pairwise geometry before a final bundle
+adjustment. Dense MVS then estimates a depth map per image. PatchMatch-based methods~\cite{schonberger2016mvs}
+propagate depth and normal hypotheses between neighboring pixels and select, per pixel, the source images that
+see the same surface.
 
 \paragraph{Feed-forward 3D reconstruction.}
 DUSt3R~\cite{wang2024dust3r} showed that a transformer can regress a point map for a pair of images without
@@ -79,6 +100,14 @@ processes all images jointly with alternating frame-wise and global attention an
 and point maps for all of them in one pass. DA3~\cite{lin2025da3} uses a plain vision transformer and a
 depth-and-ray representation and reports large gains over VGGT on pose and geometry benchmarks, including
 ETH3D.
+
+\paragraph{Combining learned predictions with bundle adjustment.}
+Several works combine learned components with classical optimization. VGGSfM~\cite{wang2024vggsfm} makes the
+whole SfM pipeline differentiable, with learned tracking and a differentiable bundle adjustment.
+MASt3R-SfM~\cite{duisterhof2025mast3rsfm} builds a global SfM pipeline on the matches and point maps of a
+pairwise network. VGGT~\cite{wang2025vggt} reports that running bundle adjustment from its predictions further
+improves the cameras. DA3-BA follows the same idea with classical SIFT tracks; our focus is on when this
+refinement helps compared to both its inputs, and on the camera model it needs.
 
 %-------------------------------------------------------------------------
 \section{Methods}
@@ -131,6 +160,112 @@ resolution.
 For both models we use the released weights without fine-tuning. All methods run on one NVIDIA A100 (40\,GB)
 GPU.
 
+\subsection{Camera model}
+\label{sec:camera}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_camera_model.pdf}
+\caption{Pixel distance between the ground-truth lens model of \emph{courtyard} and the best fit of COLMAP's
+default one-parameter radial model (left) and of a two-parameter radial model (right).}
+\label{fig:camera}
+\end{figure}
+
+COLMAP's default camera model, SIMPLE\_RADIAL, has a focal length, a principal point and one radial
+distortion coefficient $k_1$. The ETH3D images were taken with a wide-angle lens whose calibration uses a
+fisheye model with radial and thin-prism terms. To see how well COLMAP's models can represent these lenses, we
+fit each model to the ground-truth calibration of every scene by least squares over a grid of image points
+(Figure~\ref{fig:camera}). The one-parameter model leaves an error of 10.9\,px RMS and up to 61\,px in the image
+corners, and its best focal length is 2.2\% too short. Adding a second radial coefficient $k_2$ (RADIAL)
+reduces the error to 1.1\,px RMS and the focal length error to 0.25\%; the full OPENCV model with
+tangential terms gains little more (0.8\,px). The numbers vary by less than 1\,px across the 11 scenes.
+
+A camera model that cannot fit the lens forces bundle adjustment to absorb the error elsewhere, in the focal
+length and in the poses. We therefore run COLMAP a second time with the RADIAL model and all other
+settings unchanged. We call this baseline COLMAP-R. It is the fair classical reference for our refinement
+below, which uses the same camera model.
+
+\subsection{Proposed refinement: DA3-BA}
+\label{sec:da3ba}
+
+\begin{figure*}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  node distance=5mm and 7mm,
+  box/.style={draw=black!60, rounded corners=2pt, align=center, font=\small, minimum height=9mm, inner sep=3pt},
+  data/.style={box, fill=black!4},
+  ours/.style={box, fill=cvprblue!12, draw=cvprblue},
+  arr/.style={-{Latex[length=2mm]}, black!70}]
+\node[data] (img) {Input images\\(unposed)};
+\node[box, above right=0mm and 9mm of img] (da3) {DA3\\(one forward pass)};
+\node[box, below right=0mm and 9mm of img] (sift) {SIFT + matching\\+ verification};
+\node[data, right=of da3] (pred) {cameras $K_i, R_i, t_i$\\depth maps $D_i$};
+\node[data, right=of sift] (tracks) {tracks of\\verified matches};
+\node[ours, right=12mm of $(pred)!0.5!(tracks)$] (lift) {lift tracks to 3D\\with $D_i$ (median)};
+\node[ours, right=of lift] (ba) {coarse-to-fine BA\\(RADIAL camera)};
+\node[ours, right=of ba] (tri) {re-triangulate\\+ final BA};
+\node[data, right=of tri] (out) {refined cameras\\+ DA3 depth};
+\draw[arr] (img) |- (da3);
+\draw[arr] (img) |- (sift);
+\draw[arr] (da3) -- (pred);
+\draw[arr] (sift) -- (tracks);
+\draw[arr] (pred) -| ([xshift=-5mm]lift.west) -- (lift);
+\draw[arr] (tracks) -| ([xshift=-5mm]lift.west) -- (lift);
+\draw[arr] (lift) -- (ba);
+\draw[arr] (ba) -- (tri);
+\draw[arr] (tri) -- (out);
+\draw[arr, dashed] (pred.north) to[bend left=12] node[above, font=\scriptsize]{initial cameras} (ba.north);
+\end{tikzpicture}}
+\caption{DA3-BA. The DA3 prediction provides the initial cameras and, through its depth maps, an initial 3D
+point for every SIFT track; bundle adjustment then refines cameras, intrinsics and points. Blue: steps added to
+the two inputs.}
+\label{fig:pipeline}
+\end{figure*}
+
+COLMAP's cameras are accurate on the images it registers, but with few or weakly overlapping views it often
+cannot register them; DA3 always predicts all cameras, but less accurately. DA3-BA starts bundle adjustment from
+the DA3 prediction, so that every image has a camera from the start and the classical optimization only has to
+refine it (Figure~\ref{fig:pipeline}).
+
+\paragraph{Correspondences.}
+SIFT features are extracted, matched and geometrically verified exactly as in COLMAP. The verified matches are
+joined into tracks, \ie connected components of matched keypoints across images; tracks that contain two
+keypoints of the same image are discarded.
+
+\paragraph{Initialization by lifting.}
+A natural way to start from predicted cameras is to triangulate the tracks with them. This fails here: DA3's
+pose errors of one to several degrees correspond to hundreds of pixels on the $6048\times4032$ images, so
+triangulation, which keeps only observations within a few pixels, rejects almost all of them
+(Section~\ref{sec:ablation}). DA3 also predicts a depth map, so we lift every observation directly: a keypoint
+$\mathbf{x}$ in image $i$ with predicted depth $d = D_i(\mathbf{x})$ gives the 3D point
+\begin{equation}
+\mathbf{X} = R_i^\top \left( d\, K_i^{-1} \tilde{\mathbf{x}} - \mathbf{t}_i \right),
+\end{equation}
+where $K_i, R_i, \mathbf{t}_i$ are the predicted intrinsics and pose and $\tilde{\mathbf{x}}$ is the
+homogeneous pixel coordinate. The initial position of a track is the median of the lifted points of its
+observations; observations farther than 5\% of their depth from it are removed.
+
+\paragraph{Bundle adjustment.}
+We minimize the robust reprojection error
+\begin{equation}
+\min_{\{K_c\},\{R_i,\mathbf{t}_i\},\{\mathbf{X}_j\}} \sum_{(i,j)} \rho_s\!\left(
+\left\| \pi\!\left(K_{c(i)}, R_i \mathbf{X}_j + \mathbf{t}_i\right) - \mathbf{x}_{ij} \right\|^2 \right)
+\end{equation}
+over the camera intrinsics (focal length and the two radial coefficients of the RADIAL model, shared
+by images of the same camera), the poses and the points, where $\pi$ projects a point into the image and
+$\rho_s$ is the Cauchy loss with scale $s$. Since the initial reprojection errors are large (median 13 to 22\,px),
+we optimize coarse to fine: three rounds with $s = 16, 4, 1$\,px, each followed by the removal of observations
+whose error exceeds 128, 32 and 8\,px. With the refined cameras, COLMAP's triangulation then completes and merges
+tracks, and two final rounds with $s=1$\,px and a 4\,px threshold give the result. We use the bundle adjustment
+of COLMAP (Ceres solver). Images with fewer than 30 remaining observations keep their DA3 pose, mapped into the
+refined frame by the similarity transform between the DA3 and the refined camera centers of the other images.
+
+\paragraph{Output.}
+DA3-BA returns the refined cameras. For dense geometry it uses the DA3 depth maps with the refined cameras,
+rescaled by the median ratio between the depths of the refined sparse points and the DA3 depths. The same
+refinement can start from VGGT instead of DA3 (VGGT-BA).
+
 %-------------------------------------------------------------------------
 \section{Experimental Setup}
 
@@ -181,22 +316,23 @@ camera centers, TSDF fusion, F-score at 25\,cm) and compare with the published n
 We did not use the DA3 protocol for the main comparison for three reasons, each checked on our data.
 (i) Its ground-truth mesh misses much of the scanned surface (on one \emph{courtyard} image only 6\% of the rays
 through pixels with ground-truth depth hit the mesh). (ii) TSDF fusion extracts little surface from COLMAP's
-sparse, consistency-filtered depth maps, which strongly understates COLMAP's completeness. (iii) Aligning on
-camera centers is ill-conditioned when the input cameras are close together compared to the scene depth, as in
-our neighbor subsets.
+sparse, consistency-filtered depth maps, which strongly understates COLMAP's completeness (on \emph{pipes} with
+all views, recall 7\% after TSDF fusion against 77\% for the fused points). (iii) Aligning on camera centers is
+ill-conditioned when the input cameras are close together compared to the scene depth, as in our neighbor
+subsets: COLMAP's F-score at 5\,cm on a ten-view \emph{courtyard} subset was 6.5\% with camera alignment, lower
+than with five views.
+
+\subsection{Implementation details}
+
+COLMAP, COLMAP-R and DA3-BA use pycolmap 4.2 with GPU SIFT and PatchMatch. All design decisions of DA3-BA were
+made on a fixed exploration set of 13 subsets, chosen before any run: six where COLMAP fails or registers less
+than 60\% of the images, four where COLMAP's cameras are much better than DA3's, and three where DA3 is
+already accurate. All other subsets were used only for the final evaluation. GPU feature extraction and matching
+are not fully deterministic; repeated runs of an early DA3-BA configuration on the 13 subsets changed AUC@5 by at most 3.5 points on 12
+of them and by 19 points on one low-overlap subset.
 
 %-------------------------------------------------------------------------
 \section{Results}
-
-\begin{table*}[t]
-\centering
-\input{tables/tab_main.tex}
-\caption{Main results. $N$: number of reconstructions (scenes $\times$ seeds). Reg.: share of registered images.
-AUC@5/30: relative pose accuracy, pairs with an unregistered image count as failures. F, P, R: F-score, precision
-and recall of the point cloud at 2, 5 and 10\,cm; failed reconstructions count as zero. All values in \%, means
-over the same cases for every method; best per row group in bold.}
-\label{tab:main}
-\end{table*}
 
 \subsection{Reproduction of published results}
 
@@ -212,12 +348,66 @@ Table~\ref{tab:repro} compares our results under the DA3 benchmark protocol with
 within one point on all three metrics. VGGT is slightly better than published, but the ranking and the size of the
 gap between the two models are the same. We conclude that we run both models and the benchmark code correctly.
 
+\subsection{Cameras}
+
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{3.6pt}
+\input{tables/tab_pose.tex}
+\caption{Relative pose accuracy (\%). Pairs with an image that COLMAP did not register count as failures.
+COLMAP-R: COLMAP with a two-parameter radial camera model. Means over 33 subsets per setting (24 for 20 views)
+and 11 scenes with all views; best per column in bold.}
+\label{tab:pose}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_pose_views.pdf}
+\caption{Pose AUC@5 versus number of input views. Shaded: standard error over scenes and seeds.}
+\label{fig:pose}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_ba_scatter.pdf}
+\caption{AUC@5 of every subset before and after the bundle adjustment refinement. Points above the diagonal are
+improved.}
+\label{fig:scatter}
+\end{figure}
+
+Table~\ref{tab:pose} and Figure~\ref{fig:pose} compare the cameras of all methods.
+
+\paragraph{The camera model matters for COLMAP.}
+COLMAP-R improves on COLMAP in 149 of the 180 subsets and in all 11 full scenes; AUC@5 rises from 46.6 to 65.4
+over the subsets and from 70.4 to 95.2 with all views. With neighboring views or all views, COLMAP-R's cameras
+are much more accurate than those of both feed-forward models. The camera model does not, however, help with
+registration: with five random views COLMAP-R still registers only 45\% of the images, and its AUC@5 stays at
+23.
+
+\paragraph{The feed-forward models.}
+DA3's cameras are better than VGGT's in every setting. Neither model is precise at the $5^\circ$ level: with
+neighboring views DA3 reaches 57--68 AUC@5, against 87--93 for COLMAP-R. Their strength is the coarse
+threshold: at AUC@30 their cameras are rarely far off, and with random views they are far ahead of both COLMAP
+variants.
+VGGT's cameras become less accurate as views are added (AUC@5 from 63.6 to 40.5 for 5 to 20 neighboring views).
+
+\paragraph{DA3-BA.}
+DA3-BA gives the most accurate cameras in every setting. With neighboring views its AUC@5 is 95--96, above
+COLMAP-R and far above DA3 (57--68), and with all views it matches COLMAP-R (95.3 against 95.2). With random
+views it keeps DA3's robustness and adds precision: AUC@5 rises from 53.8 to 74.4 for ten views and from 56.0 to
+83.9 for twenty. Per subset, DA3-BA is better than DA3 in 152 of 180 cases and worse in 15
+(Figure~\ref{fig:scatter}); compared to COLMAP-R it is better in 103, equal in 57 and worse in 20. The same
+refinement applied to VGGT raises AUC@5 from 43.4 to 72.8 over the subsets and from 43.5 to 92.1 with all views,
+so it does not depend on the particular feed-forward model, although a better start gives a better result.
+The weakest setting is five random views, where the gain over DA3 is small (44.7 to 49.6) and DA3-BA is worse
+in 9 of 33 subsets; we analyze these cases in Section~\ref{sec:ba_fail}.
+
 \subsection{Robustness: when does COLMAP fail?}
 
-The feed-forward models always return a camera and a depth map for every image. COLMAP does not: an image whose
-pose it cannot estimate is left out (column Reg.\ in Table~\ref{tab:main}). With neighboring views it registers
-92--97\% of the images, but with random views only 43\%, 62\% and 81\% for 5, 10 and 20 views. Of the 180
-subsets, 13 fail completely, 12 of them with five random views.
+The feed-forward models and DA3-BA always return a camera for every image. COLMAP does not: an image whose pose
+it cannot estimate is left out. With neighboring views it registers 92--97\% of the images, but with random
+views only 43\%, 62\% and 81\% for 5, 10 and 20 views. Of the 180 subsets, 13 fail completely, 12 of them with
+five random views.
 
 To find the causes, we recorded the matching statistics of every run. A necessary condition for registration is
 that an image is connected to the others through verified matches. This explains part of the failures: in 9 of
@@ -227,14 +417,33 @@ the largest connected group. The others have verified matches, but too few of th
 already triangulated, for the incremental pipeline to add them. Even good matches are not always enough: in one
 \emph{playground} subset of five neighboring views, all ten image pairs pass geometric verification with a median of
 987 inlier matches, yet COLMAP finds no pair it accepts for initialization (which requires a sufficient
-triangulation angle) and returns nothing.
+triangulation angle) and returns nothing. DA3-BA does not need an initial pair, and on this subset it reaches an
+AUC@5 of 100.
 
-With all views, COLMAP registers 99\% of the images, but registration alone does not guarantee a correct
-reconstruction. On \emph{delivery\_area} all 40 images are registered, but only 306 of the 780 pairs are verified,
-and the reconstruction is distorted along the 11\,m camera path: after alignment, camera positions deviate by
-up to 0.8\,m, and the F-score at 5\,cm is 17\%.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_trajectory.pdf}
+\caption{Camera centers of \emph{delivery\_area} reconstructed from all 40 images, seen from above after
+similarity alignment to the ground truth. Lines connect each estimate to its ground-truth position.}
+\label{fig:trajectory}
+\end{figure*}
+
+Registration alone does not guarantee a correct reconstruction. On \emph{delivery\_area} with all views, COLMAP
+registers all 40 images, but the camera path is bent: after alignment the camera centers are 23\,cm off in the
+median and up to 77\,cm, and the F-score at 5\,cm is 17\%. Figure~\ref{fig:trajectory} shows that this is caused by
+the camera model: with the same images and matches, COLMAP-R's centers are within 5\,cm everywhere, as are those
+of DA3-BA, while DA3's are 10\,cm off in the median.
 
 \subsection{Geometry: accuracy and completeness}
+
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{3.6pt}
+\input{tables/tab_geometry.tex}
+\caption{F-score (\%) of the dense point cloud; failed reconstructions count as zero. Same cases as
+Table~\ref{tab:pose}; best per column in bold.}
+\label{tab:geometry}
+\end{table}
 
 \begin{figure}[t]
 \centering
@@ -260,32 +469,40 @@ the windows, are white for every method.}
 \label{fig:qual}
 \end{figure*}
 
-DA3 has the highest F-score in every setting and at every threshold, followed by VGGT
-(Table~\ref{tab:main}, Figure~\ref{fig:fscore}). The order is the same with all views, where COLMAP reaches an
-F-score of 52\% at 5\,cm against 61\% for VGGT and 77\% for DA3.
+Table~\ref{tab:geometry} and Figure~\ref{fig:fscore} compare the dense geometry. With sparse inputs DA3 gives the
+best geometry: for five and ten views of either kind, DA3 or DA3-BA, which uses the DA3 depth, has the highest
+F-score at both thresholds. With more
+views COLMAP-R catches up. At 2\,cm it is on par with DA3 for twenty views and the best method with all views
+(59.7 against 51.1); at 5\,cm it trails DA3 by one point with all views. Default COLMAP is far behind in every
+setting, so the camera model accounts for most of the gap between the two families that a comparison with
+default settings suggests.
 
-Precision and recall show where the difference comes from (Figure~\ref{fig:pr}). COLMAP has the highest precision
-with ten or more input views (81--86\% at 5\,cm), and with neighboring views the median distance from its points
-to the ground truth is 9--14\,mm, against 20--31\,mm for DA3 and 21--44\,mm for VGGT. Its recall, however, stays at
-26--40\% even with neighboring views, while DA3 recovers 84--90\% of the visible surface. Stereo fusion keeps a
-point only if several depth maps agree on it, so COLMAP leaves holes wherever matching is ambiguous: on weakly
-textured surfaces such as the walls in \emph{office}, at grazing angles and in regions seen by few images
-(Figure~\ref{fig:qual}). The feed-forward models predict depth for every pixel, including these regions.
+Precision and recall show where the differences come from (Figure~\ref{fig:pr}). COLMAP-R has by far the
+highest precision: from ten neighboring views on, 95\% of its points are within 5\,cm of the ground truth,
+against 68--75\% for DA3. Its recall, however, stays at 43--55\% with neighboring views, while DA3 recovers
+84--85\% of the visible surface. Stereo fusion keeps a point only if several depth maps agree on it, so COLMAP
+leaves holes wherever matching is ambiguous: on weakly textured surfaces such as the walls in \emph{office}, at
+grazing angles and in regions seen by few images (Figure~\ref{fig:qual}). The feed-forward models predict depth
+for every pixel, including these regions.
+
+DA3-BA's geometry is within about one point of DA3's with neighboring views and all views, and up to four points
+lower with five random views (Table~\ref{tab:geometry}): the refined cameras do not make the dense point cloud better, because its error comes mostly from the per-view depth maps
+themselves. We return to this in Section~\ref{sec:dense}.
 
 \paragraph{More views.}
 With neighboring views, COLMAP improves from 5 to 10 views and then stays at the same level; with random views it
-keeps improving, because more images get registered. The feed-forward models
-become worse from 10 to 20 neighboring views (VGGT from 72\% to 61\% at 5\,cm, DA3 from 80\% to 74\%). Larger
-subsets also cover more of the scene: the median angle between the viewing directions of two images grows from
-$20^\circ$ for 5 views to $57^\circ$ for 20 views, and the far end of the depth range (95th percentile) from 9 to
-14\,m. To separate the effect of more input views from that of a larger scene, we use the fact that our neighbor
-subsets are nested: the 5 views of a subset are also contained in the 10- and 20-view subsets with the same
-seed. We cut the predictions for these 5 views out of the larger reconstructions and evaluate them exactly like a
-5-view reconstruction (Table~\ref{tab:nested}). On the same five images, the geometry of both feed-forward models
-stays the same with more input views, so their drop in Table~\ref{tab:main} comes from the additional, harder
-parts of the scene. Their cameras do not profit from the additional views either, and VGGT's become clearly
-worse with 20 views. COLMAP behaves the opposite way: with 10 or 20 input views, the relative poses of the same
-five images are much more accurate, because bundle adjustment uses all views and more images get registered.
+keeps improving, because more images get registered. The feed-forward models become worse from 10 to 20
+neighboring views. Larger subsets also cover more of the scene: the median angle between the viewing directions
+of two images grows from $20^\circ$ for 5 views to $57^\circ$ for 20 views, and the far end of the depth range
+(95th percentile) from 9 to 14\,m. To separate the effect of more input views from that of a larger scene, we use
+the fact that our neighbor subsets are nested: the 5 views of a subset are also contained in the 10- and 20-view
+subsets with the same seed. We cut the predictions for these 5 views out of the larger reconstructions and
+evaluate them exactly like a 5-view reconstruction (Table~\ref{tab:nested}). On the same five images, the geometry
+of both feed-forward models stays the same with more input views, so their drop in Table~\ref{tab:geometry}
+comes from the additional, harder parts of the scene. Their cameras do not profit from the additional views
+either, and VGGT's become clearly worse with 20 views. COLMAP behaves the opposite way: with 10 or 20 input views,
+the relative poses of the same five images are much more accurate, because bundle adjustment uses all views and
+more images get registered.
 
 \begin{table}[t]
 \centering
@@ -295,21 +512,11 @@ COLMAP's fused point cloud cannot be split by view, so only its cameras are eval
 \label{tab:nested}
 \end{table}
 
-\subsection{Cameras}
-
-Relative pose accuracy depends on the setting more than geometry does. With five neighboring views, DA3 has the
-best AUC@5; from ten neighboring views on and with all views, COLMAP has (Table~\ref{tab:main}). With random views,
-DA3 is best by far, because COLMAP's unregistered images count as failures. Restricted to the image pairs COLMAP
-registers, its AUC@5 is the highest in every setting (62--75\% against 45--68\% for DA3), although this compares
-different, and for COLMAP likely easier, sets of pairs. At the coarser AUC@30, DA3 is the best or within 0.2 points
-of COLMAP everywhere: its cameras are rarely far off, but less precise than those of a well-registered COLMAP
-reconstruction. VGGT loses accuracy steadily with more views, from 64\% AUC@5 with 5 neighboring views to 41\% with
-20 and 44\% with all views.
-
 \subsection{Scene type}
 
 \begin{table*}[t]
 \centering
+\setlength{\tabcolsep}{3.1pt}
 \input{tables/tab_scene.tex}
 \caption{Per-scene results. SIFT kp.: mean number of SIFT keypoints per image. COLMAP reg.: share of registered
 images (\%) for neighbor and random subsets. F@5: F-score at 5\,cm (\%), averaged over neighbor subsets of 5, 10
@@ -317,11 +524,11 @@ and 20 views, and with all views.}
 \label{tab:scene}
 \end{table*}
 
-All methods are better on the six indoor scenes than on the five outdoor ones (Table~\ref{tab:scene}). With
-neighboring views, DA3 reaches an average F-score at 5\,cm of 90\% indoors and 66\% outdoors, VGGT 82\% and 59\%,
-COLMAP 48\% and 37\%. Outdoor scenes are deeper (median depth 5.7\,m against 2.7\,m indoors), so a given relative depth error becomes a
-larger absolute error. The outdoor scenes are also where COLMAP gets closest: with all views it has the best
-F-score on \emph{courtyard} and \emph{facade}, the two scenes with the largest depth and many images (38 and 76).
+Table~\ref{tab:scene} breaks the geometry down by scene. All methods are better on the six indoor scenes than on
+the five outdoor ones. Outdoor scenes are deeper (median depth 5.7\,m against 2.7\,m indoors), so a given
+relative depth error becomes a larger absolute error. With all views the scene type also decides which family
+wins: COLMAP-R has the best F-score on all five outdoor scenes and on the strongly textured \emph{relief},
+\emph{relief\_2} and \emph{terrains}, while DA3 is best on \emph{kicker}, \emph{office} and \emph{pipes}.
 
 Weak texture affects the classical pipeline most. \emph{office} gives about half as many SIFT keypoints as the
 other scenes (5.1k per image). COLMAP still registers almost all neighboring views there, but its recall is the
@@ -336,7 +543,7 @@ lowest of all scenes, because PatchMatch finds no reliable matches on the white 
 \input{tables/tab_efficiency.tex}
 \caption{End-to-end runtime per reconstruction (image reading included, model loading excluded; mean) and peak
 GPU memory (maximum) on one A100. Columns: number of input views. 5--20 views: three scenes, neighbor subsets;
-all: 11 scenes, 34 views on average.}
+all: 11 scenes, 34 views on average. DA3-BA and VGGT-BA include the feed-forward model.}
 \label{tab:efficiency}
 \end{table}
 
@@ -347,54 +554,110 @@ time); its forward pass itself takes 0.7 to 5.6 seconds. Measured end to end, th
 240 times faster than COLMAP. Memory behaves the other way round. COLMAP's peak is 5.8\,GB in every run, because it
 processes images at a fixed resolution and one reference image at a time. The feed-forward models attend over the
 tokens of all views at once, so their memory grows with the number of views, up to 14\,GB for VGGT and 20\,GB for
-DA3 on the 76 images of \emph{facade}.
+DA3 on the 76 images of \emph{facade}. \todo{DA3-BA runtime once 1115-efficiency / 1115-allviews-time are in}
 
 %-------------------------------------------------------------------------
-\section{Exploratory: Combining Both Methods}
+\section{Analysis of DA3-BA}
 
-Since COLMAP is more precise and the feed-forward models are more complete, we tried to combine them. The cameras
-predicted by VGGT or DA3 replace COLMAP's incremental SfM: SIFT matches are triangulated with these cameras and
-refined by bundle adjustment, then PatchMatch stereo and fusion run as usual, and finally the holes of the fused
-cloud are filled with the feed-forward depth, aligned to it. We tested this on two scenes (\emph{office},
-\emph{courtyard}) with 5 and 10 neighboring views.
+\subsection{Ablation}
+\label{sec:ablation}
 
-The combination did not beat DA3: the best variant reached an F-score at 2\,cm equal to DA3 on one case and
-2--4 points lower on the other three. We found three reasons. First, PatchMatch with the predicted cameras alone
-yields few consistent points; bundle adjustment is necessary, but with few triangulated points it gives worse
-cameras than full incremental SfM, so the MVS part is less precise than COLMAP itself. Second, refining the filled
-depth with a guided filter made the results worse in every case. Third, and most important, the precision
-advantage of the classical pipeline is small: on the surface that COLMAP reconstructs, its median error is
-4--6\,mm against 7--10\,mm for DA3. This difference of about 3\,mm is below the noise of the outdoor ground truth
-(7--8\,mm), while the missing surface costs far more F-score than the higher precision gains.
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{4pt}
+\input{tables/tab_ablation.tex}
+\caption{Design choices of DA3-BA on the 13 exploration subsets (\%), grouped into (a) subsets where COLMAP fails
+or registers less than 60\% of the images (6), (b) subsets where COLMAP's cameras are much better than DA3's (4)
+and (c) subsets where DA3 is already accurate (3). Each row below DA3-BA changes one choice.}
+\label{tab:ablation}
+\end{table}
+
+\todo{ablation text once 1115-abl-* are evaluated}
+
+\subsection{Where the refinement does not help}
+\label{sec:ba_fail}
+
+DA3-BA is worse than DA3 in 15 of the 180 subsets. Fourteen of them are random subsets, nine of them with five
+views. These are the subsets with the fewest correspondences: with five random views the median number of
+lifted tracks is 1280, against 4276 for five neighboring views, and a median image has 331 observations
+after the refinement, against 1700--2100 with neighboring views. Almost one in three images in these subsets
+ends with fewer than 30 observations and keeps its DA3 pose. With few tracks per image pair the reprojection error no
+longer constrains every degree of freedom, and the optimization can trade a pose error against the intrinsics or
+against another pose while keeping the reprojection error small; the reprojection error at convergence is as
+low as in the successful cases (median 0.2--0.3\,px). We tried two remedies on the exploration set. Weighting
+images by the uncertainty of their refined pose, estimated from the bundle adjustment covariance, did not work:
+the estimated standard deviations (0.02--0.2$^\circ$) were far below the actual errors and barely correlated
+with them, because the errors are systematic rather than noise. Soft priors that keep the camera centers close
+to DA3's changed nothing, since thousands of reprojection terms outweigh them. A more reliable test of when to
+trust the refinement remains open.
+
+\subsection{Dense geometry on the refined cameras}
+\label{sec:dense}
+
+\begin{table*}[t]
+\centering
+\input{tables/tab_dense.tex}
+\caption{Dense geometry with the refined cameras (\%): DA3 depth (DA3-BA), COLMAP PatchMatch and fusion on the
+refined cameras (+ MVS), and the MVS cloud with its holes filled by the DA3-BA depth (+ fill). Subsets: the 123
+subsets where the dense stage finished.}
+\label{tab:dense}
+\end{table*}
+
+Since DA3-BA's cameras are better than COLMAP-R's, we also tried to obtain better geometry from them
+(Table~\ref{tab:dense}). Running COLMAP's PatchMatch stereo and fusion on the refined cameras gives a point cloud
+that is as precise as COLMAP-R's (94\% at 5\,cm over the subsets, 95\% with all views) and as incomplete, so it has nearly the same F-score; with
+all views the two are within 0.5 points. Filling the holes of this cloud with the DA3-BA depth raises recall to
+the level of DA3, but the filled points are less precise and their F-score at 2\,cm is lower than DA3's alone
+(44.2 against 49.1 over the subsets, 44.4 against 51.1 with all views). The precise MVS points and the complete
+feed-forward points do not combine into a better cloud by a simple union: the filled regions are exactly the hard
+ones, where the feed-forward depth is least accurate, and the seams between the two sources add error. An
+earlier version of this combination, with COLMAP's own cameras, gave the same result.
 
 %-------------------------------------------------------------------------
 \section{Limitations}
 
 We evaluate on one benchmark with 11 scenes and three random subsets per setting, so per-scene differences are
-noisy, although the main trends hold across scenes. COLMAP runs with default settings; tuned parameters, for example
-relaxed initialization or more lenient fusion, would likely register more images and fill more of the surface.
-The feed-forward models receive the original distorted images and are evaluated with their own pinhole
-intrinsics, as in the DA3 benchmark; the ETH3D lenses are close to rectilinear (the difference in back-projection is
-about 2\,mm), so this has little effect. The models run at about 500 pixels width and COLMAP at 1600 pixels, and we
-compare each method at its standard resolution rather than at equal resolution. The ground truth is accurate to
-about 2\,mm indoors and 7--8\,mm outdoors, so differences below 1\,cm outdoors cannot be resolved. VGGT's
-runtime is dominated by its image loader and would be much lower with parallel decoding.
+noisy, although the main trends hold across scenes. Apart from the camera model, COLMAP runs with default
+settings; relaxed initialization or more lenient fusion would likely register more images and fill more of the
+surface. The feed-forward models receive the original distorted images and are evaluated with their own pinhole
+intrinsics, as in the DA3 benchmark; DA3-BA estimates the distortion but returns the DA3 depth maps unchanged. The
+models run at about 500 pixels width and COLMAP at 1600 pixels, and we compare each method at its standard
+resolution rather than at equal resolution. The ground truth is accurate to about 2\,mm indoors and 7--8\,mm
+outdoors, so differences below 1\,cm outdoors cannot be resolved. DA3-BA depends on SIFT matches: with five
+random views it gains little and sometimes loses accuracy, and we have no reliable test yet that detects these
+cases.
 
 %-------------------------------------------------------------------------
 \section{Conclusion}
 
-On ETH3D, the feed-forward models are the better choice when only a few images are available: DA3 gives the most
-complete and, by F-score, the best geometry in every setting, never fails, and needs seconds instead of minutes.
-The classical pipeline remains the more accurate one where it works: its points are the most precise, and its
-cameras are the best on the images it registers and with dense views. Its weaknesses are coverage and robustness,
-not accuracy: it misses weakly textured and sparsely observed surfaces and fails when the views overlap little.
-The two families also scale differently. COLMAP's cameras improve as views are added and its memory stays constant;
-the feed-forward models do not improve on a fixed set of views as more views are added, and their memory grows
-with the number of views.
+On ETH3D, which method to use depends on the number and overlap of the views. With few views, the feed-forward
+models give the more complete and, by F-score, the better geometry, never fail, and need seconds instead of
+minutes. With many views, the classical pipeline is at least as good, provided its camera model fits the lens:
+COLMAP with a two-parameter radial model gives the most precise points and, with all views, the best F-score at
+2\,cm, while its default model makes it look far worse than it is. For the cameras the two families are best
+combined. Starting bundle adjustment from the DA3 prediction, with SIFT tracks lifted by the predicted depth,
+gives cameras that are more accurate than both inputs in nearly every setting and never fails. The dense
+geometry, however, is not improved by better cameras alone; it remains limited by the per-view depth of the
+feed-forward model and by the incompleteness of multi-view stereo.
 
 {\small
 \bibliographystyle{ieeenat_fullname}
 \bibliography{refs}
 }
+
+\clearpage
+\appendix
+\section{Full results}
+
+\begin{table*}[t]
+\centering
+\input{tables/tab_main.tex}
+\caption{All metrics per setting (\%). $N$: number of reconstructions. Reg.: share of registered images.
+AUC@5/30: relative pose accuracy with unregistered images counted as failures. F, P, R: F-score, precision and
+recall of the point cloud at 2, 5 and 10\,cm; failed reconstructions count as zero. Best per setting in bold.}
+\label{tab:main}
+\end{table*}
+
+Table~\ref{tab:main} lists all metrics for every setting.
 
 \end{document}

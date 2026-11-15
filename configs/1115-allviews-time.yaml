@@ -1,0 +1,26 @@
+# Runtime of DA3-BA / VGGT-BA with all views, without other jobs on the GPU (11 scenes; the 11/13 run
+# 1113-allviews shared the GPUs with graph-mining jobs). Poses are not re-evaluated here.
+run_name: 1115-allviews-time
+source_run: 1028-allviews       # DA3 / VGGT predictions with all views
+
+colmap:
+  method_name: colmap_radial    # run_colmap.py output name
+  camera_model: RADIAL          # k1, k2; SIMPLE_RADIAL: 11 px RMS fit error to the GT lens, RADIAL ~1-1.6 px
+  camera_mode: AUTO
+  sift_max_image_size: 3200
+  dense_max_image_size: 1600
+  patch_match_src_images: 20
+  gpu: true
+da3ba:
+  lift_tol: 0.05                # drop lifted observations farther than 5% of their depth from the track median
+  min_points: 50                # fewer lifted tracks -> keep DA3
+  rounds: [[16, 128], [4, 32], [1, 8]]   # [Cauchy scale px, max reprojection error px] per BA round
+  final_rounds: [[1, 4], [1, 4]]         # after COLMAP triangulation with the refined cameras
+  min_obs: 30                   # views with fewer observations keep their (mapped) DA3 pose
+completion:                     # dense stage hole filling (depth_completion.py, no guided correction)
+  coverage_radius: 2            # px dilation of projected fused points marking covered pixels
+  align_samples_per_view: 20000 # FF/MVS correspondences per view for the FF -> MVS Sim(3)
+  min_support_pixels: 500       # min correspondences overall
+  icp_samples: 200000           # FF points (covered pixels) used for the FF -> MVS ICP refinement
+  icp_iters: 10
+  voxel: 0.005                  # per-view voxel size of fill points (m, = evaluation voxel)

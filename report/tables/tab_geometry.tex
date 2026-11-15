@@ -1,0 +1,21 @@
+\begin{tabular}{lccccccc}
+\toprule
+ & \multicolumn{3}{c}{Neighbor views} & \multicolumn{3}{c}{Random views} & All \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-8}
+Method & 5 & 10 & 20 & 5 & 10 & 20 & views \\
+\midrule
+\multicolumn{8}{l}{\emph{F-score at 2\,cm}} \\
+COLMAP & 22.0 & 29.3 & 26.2 & 6.8 & 15.4 & 17.9 & 31.0 \\
+COLMAP-R & 44.1 & 50.1 & \textbf{50.1} & 13.5 & 34.2 & \textbf{46.1} & \textbf{59.7} \\
+VGGT & 52.3 & 47.0 & 36.0 & 24.2 & 29.6 & 28.7 & 36.3 \\
+DA3 & \textbf{55.2} & \textbf{55.5} & 49.1 & \textbf{34.9} & \textbf{44.8} & 44.1 & 51.1 \\
+DA3-BA & 54.6 & 55.1 & 48.0 & 30.6 & 42.1 & 43.8 & 51.5 \\
+\midrule
+\multicolumn{8}{l}{\emph{F-score at 5\,cm}} \\
+COLMAP & 36.6 & 46.5 & 44.5 & 10.7 & 27.8 & 36.0 & 51.8 \\
+COLMAP-R & 55.5 & 65.1 & 67.3 & 17.6 & 44.7 & 62.7 & 75.6 \\
+VGGT & 76.5 & 72.1 & 61.1 & 42.8 & 52.8 & 51.7 & 61.3 \\
+DA3 & 79.7 & 79.6 & 74.2 & \textbf{54.4} & \textbf{68.9} & 68.3 & 76.5 \\
+DA3-BA & \textbf{80.2} & \textbf{80.9} & \textbf{75.3} & 52.0 & 66.9 & \textbf{70.8} & \textbf{77.5} \\
+\bottomrule
+\end{tabular}

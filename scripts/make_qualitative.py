@@ -72,6 +72,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("run")
     ap.add_argument("cases", nargs="+", help="scene:case_name")
+    ap.add_argument("--extra", nargs="*", default=[],
+                    help="label:run:method columns inserted after COLMAP (e.g. COLMAP-RADIAL:1113-main:colmap_radial)")
     ap.add_argument("--out", default=str(ROOT / "report" / "figures" / "fig_qualitative.pdf"))
     ap.add_argument("--preview", help="also save a PNG here (for checking the figure without a PDF viewer)")
     args = ap.parse_args()
@@ -90,13 +92,16 @@ def main():
         rgb = cv2.cvtColor(cv2.imread(str(ETH3D_ROOT / scene / "images" / "dslr_images" / name)), cv2.COLOR_BGR2RGB)
         rgb = cv2.resize(rgb, (WIDTH, int(round(cam.height * scale))), interpolation=cv2.INTER_AREA)
         panels = [("Input view", rgb)]
-        for m in METHODS:
-            pts, err = final_points(ds, args.run, m, scene, case)
-            panels.append((LABEL[m], render(pts, err, E, cam, scale)))
-            print(f"{scene} {case} {m}: {len(pts)} points, median error {np.median(err) * 100 if len(err) else np.nan:.1f} cm")
+        columns = [(LABEL["colmap"], args.run, "colmap")] + [tuple(e.split(":")) for e in args.extra] + \
+                  [(LABEL[m], args.run, m) for m in METHODS[1:]]
+        for label, run, m in columns:
+            pts, err = final_points(ds, run, m, scene, case)
+            panels.append((label, render(pts, err, E, cam, scale)))
+            print(f"{scene} {case} {label}: {len(pts)} points, median error {np.median(err) * 100 if len(err) else np.nan:.1f} cm")
         rows.append((f"{scene}, {case.split('_')[1][1:]} views", panels))
 
-    fig, axes = plt.subplots(len(rows), 4, figsize=(6.9, 1.2 * len(rows) + 0.35), squeeze=False)
+    ncol = len(rows[0][1])
+    fig, axes = plt.subplots(len(rows), ncol, figsize=(6.9, 6.9 / ncol * 0.69 * len(rows) + 0.4), squeeze=False)
     for i, (title, panels) in enumerate(rows):
         for j, (label, im) in enumerate(panels):
             ax = axes[i, j]

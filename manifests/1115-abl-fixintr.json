@@ -1,0 +1,410 @@
+{
+ "config": "1115-abl-fixintr",
+ "source": "1027-main",
+ "selection": "see notes/LOG.md 11/13",
+ "cases": [
+  {
+   "scene": "courtyard",
+   "n_views": 5,
+   "sampling": "neighbor",
+   "seed": 0,
+   "indices": [
+    12,
+    13,
+    14,
+    15,
+    24
+   ],
+   "images": [
+    "DSC_0286.JPG",
+    "DSC_0287.JPG",
+    "DSC_0288.JPG",
+    "DSC_0289.JPG",
+    "DSC_0310.JPG"
+   ],
+   "group": "da3_good"
+  },
+  {
+   "scene": "relief_2",
+   "n_views": 5,
+   "sampling": "neighbor",
+   "seed": 0,
+   "indices": [
+    11,
+    12,
+    13,
+    16,
+    17
+   ],
+   "images": [
+    "DSC_0481.JPG",
+    "DSC_0482.JPG",
+    "DSC_0483.JPG",
+    "DSC_0486.JPG",
+    "DSC_0487.JPG"
+   ],
+   "group": "colmap_better"
+  },
+  {
+   "scene": "facade",
+   "n_views": 10,
+   "sampling": "neighbor",
+   "seed": 0,
+   "indices": [
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    46,
+    47,
+    49,
+    50
+   ],
+   "images": [
+    "DSC_0331.JPG",
+    "DSC_0330.JPG",
+    "DSC_0329.JPG",
+    "DSC_0328.JPG",
+    "DSC_0327.JPG",
+    "DSC_0326.JPG",
+    "DSC_0389.JPG",
+    "DSC_0390.JPG",
+    "DSC_0392.JPG",
+    "DSC_0393.JPG"
+   ],
+   "group": "colmap_better"
+  },
+  {
+   "scene": "playground",
+   "n_views": 20,
+   "sampling": "random",
+   "seed": 0,
+   "indices": [
+    1,
+    2,
+    4,
+    6,
+    8,
+    9,
+    11,
+    12,
+    13,
+    15,
+    16,
+    18,
+    22,
+    23,
+    24,
+    25,
+    27,
+    28,
+    30,
+    31
+   ],
+   "images": [
+    "DSC_0585.JPG",
+    "DSC_0584.JPG",
+    "DSC_0582.JPG",
+    "DSC_0580.JPG",
+    "DSC_0578.JPG",
+    "DSC_0577.JPG",
+    "DSC_0568.JPG",
+    "DSC_0569.JPG",
+    "DSC_0570.JPG",
+    "DSC_0572.JPG",
+    "DSC_0573.JPG",
+    "DSC_0575.JPG",
+    "DSC_0595.JPG",
+    "DSC_0596.JPG",
+    "DSC_0597.JPG",
+    "DSC_0598.JPG",
+    "DSC_0602.JPG",
+    "DSC_0603.JPG",
+    "DSC_0605.JPG",
+    "DSC_0606.JPG"
+   ],
+   "group": "colmap_fails"
+  },
+  {
+   "scene": "relief",
+   "n_views": 5,
+   "sampling": "neighbor",
+   "seed": 1,
+   "indices": [
+    4,
+    5,
+    6,
+    7,
+    9
+   ],
+   "images": [
+    "DSC_0444.JPG",
+    "DSC_0443.JPG",
+    "DSC_0442.JPG",
+    "DSC_0441.JPG",
+    "DSC_0439.JPG"
+   ],
+   "group": "colmap_better"
+  },
+  {
+   "scene": "delivery_area",
+   "n_views": 20,
+   "sampling": "random",
+   "seed": 1,
+   "indices": [
+    0,
+    3,
+    4,
+    6,
+    7,
+    8,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    24,
+    25,
+    26,
+    28,
+    30,
+    31,
+    36,
+    39
+   ],
+   "images": [
+    "DSC_0718.JPG",
+    "DSC_0715.JPG",
+    "DSC_0710.JPG",
+    "DSC_0708.JPG",
+    "DSC_0707.JPG",
+    "DSC_0706.JPG",
+    "DSC_0702.JPG",
+    "DSC_0701.JPG",
+    "DSC_0700.JPG",
+    "DSC_0699.JPG",
+    "DSC_0698.JPG",
+    "DSC_0683.JPG",
+    "DSC_0678.JPG",
+    "DSC_0677.JPG",
+    "DSC_0676.JPG",
+    "DSC_0685.JPG",
+    "DSC_0687.JPG",
+    "DSC_0688.JPG",
+    "DSC_0693.JPG",
+    "DSC_0696.JPG"
+   ],
+   "group": "colmap_fails"
+  },
+  {
+   "scene": "office",
+   "n_views": 5,
+   "sampling": "neighbor",
+   "seed": 2,
+   "indices": [
+    0,
+    1,
+    2,
+    5,
+    22
+   ],
+   "images": [
+    "DSC_0251.JPG",
+    "DSC_0250.JPG",
+    "DSC_0249.JPG",
+    "DSC_0242.JPG",
+    "DSC_0252.JPG"
+   ],
+   "group": "da3_good"
+  },
+  {
+   "scene": "electro",
+   "n_views": 10,
+   "sampling": "random",
+   "seed": 2,
+   "indices": [
+    1,
+    3,
+    5,
+    10,
+    13,
+    16,
+    19,
+    23,
+    33,
+    37
+   ],
+   "images": [
+    "DSC_9302.JPG",
+    "DSC_9300.JPG",
+    "DSC_9297.JPG",
+    "DSC_9285.JPG",
+    "DSC_9282.JPG",
+    "DSC_9279.JPG",
+    "DSC_9264.JPG",
+    "DSC_9260.JPG",
+    "DSC_9273.JPG",
+    "DSC_9277.JPG"
+   ],
+   "group": "colmap_fails"
+  },
+  {
+   "scene": "terrains",
+   "n_views": 10,
+   "sampling": "random",
+   "seed": 2,
+   "indices": [
+    2,
+    3,
+    5,
+    10,
+    13,
+    16,
+    19,
+    23,
+    37,
+    40
+   ],
+   "images": [
+    "DSC_0649.JPG",
+    "DSC_0648.JPG",
+    "DSC_0631.JPG",
+    "DSC_0626.JPG",
+    "DSC_0615.JPG",
+    "DSC_0618.JPG",
+    "DSC_0622.JPG",
+    "DSC_0653.JPG",
+    "DSC_0667.JPG",
+    "DSC_0670.JPG"
+   ],
+   "group": "colmap_fails"
+  },
+  {
+   "scene": "kicker",
+   "n_views": 20,
+   "sampling": "neighbor",
+   "seed": 2,
+   "indices": [
+    0,
+    1,
+    5,
+    6,
+    7,
+    10,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    22,
+    23,
+    24,
+    25,
+    27,
+    28,
+    29,
+    30
+   ],
+   "images": [
+    "DSC_6511.JPG",
+    "DSC_6510.JPG",
+    "DSC_6506.JPG",
+    "DSC_6505.JPG",
+    "DSC_6504.JPG",
+    "DSC_6500.JPG",
+    "DSC_6491.JPG",
+    "DSC_6492.JPG",
+    "DSC_6493.JPG",
+    "DSC_6494.JPG",
+    "DSC_6495.JPG",
+    "DSC_6496.JPG",
+    "DSC_6512.JPG",
+    "DSC_6513.JPG",
+    "DSC_6514.JPG",
+    "DSC_6515.JPG",
+    "DSC_6517.JPG",
+    "DSC_6518.JPG",
+    "DSC_6519.JPG",
+    "DSC_6520.JPG"
+   ],
+   "group": "colmap_better"
+  },
+  {
+   "scene": "playground",
+   "n_views": 5,
+   "sampling": "neighbor",
+   "seed": 1,
+   "indices": [
+    6,
+    7,
+    8,
+    9,
+    19
+   ],
+   "images": [
+    "DSC_0580.JPG",
+    "DSC_0579.JPG",
+    "DSC_0578.JPG",
+    "DSC_0577.JPG",
+    "DSC_0576.JPG"
+   ],
+   "group": "colmap_fails"
+  },
+  {
+   "scene": "courtyard",
+   "n_views": 5,
+   "sampling": "random",
+   "seed": 1,
+   "indices": [
+    4,
+    7,
+    8,
+    16,
+    36
+   ],
+   "images": [
+    "DSC_0303.JPG",
+    "DSC_0300.JPG",
+    "DSC_0299.JPG",
+    "DSC_0290.JPG",
+    "DSC_0322.JPG"
+   ],
+   "group": "colmap_fails"
+  },
+  {
+   "scene": "pipes",
+   "n_views": 10,
+   "sampling": "neighbor",
+   "seed": 1,
+   "indices": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "images": [
+    "DSC_0642.JPG",
+    "DSC_0641.JPG",
+    "DSC_0640.JPG",
+    "DSC_0639.JPG",
+    "DSC_0637.JPG",
+    "DSC_0636.JPG",
+    "DSC_0635.JPG",
+    "DSC_0634.JPG",
+    "DSC_0644.JPG",
+    "DSC_0645.JPG"
+   ],
+   "group": "da3_good"
+  }
+ ]
+}
