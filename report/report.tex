@@ -554,7 +554,13 @@ time); its forward pass itself takes 0.7 to 5.6 seconds. Measured end to end, th
 240 times faster than COLMAP. Memory behaves the other way round. COLMAP's peak is 5.8\,GB in every run, because it
 processes images at a fixed resolution and one reference image at a time. The feed-forward models attend over the
 tokens of all views at once, so their memory grows with the number of views, up to 14\,GB for VGGT and 20\,GB for
-DA3 on the 76 images of \emph{facade}. \todo{DA3-BA runtime once 1115-efficiency / 1115-allviews-time are in}
+DA3 on the 76 images of \emph{facade}.
+
+DA3-BA takes 18, 76 and 159 seconds for 5, 10 and 20 views and 214 seconds with all views, 3.6 to 6.6 times
+less than COLMAP. Most of this time is the bundle adjustment, which runs on the CPU (11 to 189 seconds); SIFT
+extraction and matching take 5 to 20 seconds and DA3 itself a few seconds. VGGT-BA is slightly slower
+(22 to 231 seconds) because of VGGT's image loading. The peak GPU memory is that of the feed-forward model, since
+SIFT and the bundle adjustment need much less.
 
 %-------------------------------------------------------------------------
 \section{Analysis of DA3-BA}
@@ -572,7 +578,32 @@ and (c) subsets where DA3 is already accurate (3). Each row below DA3-BA changes
 \label{tab:ablation}
 \end{table}
 
-\todo{ablation text once 1115-abl-* are evaluated}
+Table~\ref{tab:ablation} changes one design choice at a time on the 13 exploration subsets.
+
+\paragraph{Lifting the tracks.} Starting the bundle adjustment from points that COLMAP triangulates with the DA3
+cameras, instead of lifting the tracks with DA3 depth, lowers AUC@5 from 89.2 to 68.9. With pose errors of
+several degrees, the rays of a track do not meet at one point, and most tracks fail COLMAP's triangulation checks:
+a subset starts with 172 points in the median, against 5955 lifted points. Many images then have too few observations
+to be refined, and the few remaining points constrain the poses poorly. The largest drop is on
+\emph{playground} with 20 random views, where AUC@5 falls from 99.3 to 0.5. Lifting needs only one view per
+observation and uses DA3's depth, which is consistent within each view even when the poses are not.
+
+\paragraph{Camera model.} With COLMAP's default one-parameter model, AUC@5 drops to 68.7, and in group (b) it
+falls below COLMAP-R. The camera model therefore matters for DA3-BA as much as for COLMAP. It does not explain the
+whole gain, though: with the same one-parameter model DA3-BA is still 21 points above default COLMAP, and with the
+two-parameter model it is 30 points above COLMAP-R.
+
+\paragraph{Refining the intrinsics.} Keeping DA3's pinhole intrinsics fixed (focal length from DA3, no
+distortion) and refining only poses and points gives 35.5, lower than DA3 alone (58.1). The bundle adjustment can
+then lower the reprojection error only by moving the cameras to absorb the focal length error and the lens
+distortion, which makes the poses worse. The intrinsics have to be refined together with the poses.
+
+\paragraph{Coarse-to-fine.} A single round at the final 1\,px scale is almost as good on average (88.2 against
+89.2 AUC@5), and the other 12 subsets change by less than one point. The difference is in \emph{delivery\_area} with 20 random
+views, where AUC@5 falls from 44.7 to 30.7 and AUC@30 from 89.1 to 54.4. There, the coarse round removes 15.9k observations that do not fit the
+rest, and nine images keep their DA3 pose. The single fine round keeps these observations and moves all 20 images,
+and several of them end at a wrong pose. The coarse rounds are a safeguard for subsets with large initial errors
+and cost little elsewhere.
 
 \subsection{Where the refinement does not help}
 \label{sec:ba_fail}

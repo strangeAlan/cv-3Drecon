@@ -23,6 +23,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 LABEL = {"colmap": "COLMAP", "colmap_radial": "COLMAP-R", "vggt": "VGGT", "vggtba": "VGGT-BA", "da3": "DA3",
@@ -162,8 +163,8 @@ def _ba_rows(runs):
         for f in glob.glob(str(ROOT / "runs" / run / "*ba" / "*" / "*" / "info.json")):
             j = json.load(open(f))
             ff = j["method"][:-2]
-            ff_info = json.load(open(ROOT / "runs" / json.load(open(ROOT / "manifests" / f"{run}.json")).get(
-                "source", run) / ff / j["case"]["scene"] / Path(f).parent.name / "info.json"))
+            source = yaml.safe_load(open(ROOT / "configs" / f"{run}.yaml"))["source_run"]  # DA3 / VGGT predictions
+            ff_info = json.load(open(ROOT / "runs" / source / ff / j["case"]["scene"] / Path(f).parent.name / "info.json"))
             rows.append({"method": j["method"], "n_views": str(j["case"]["n_views"]), "time": sum(j["time_s"].values()),
                          "mem": max(j.get("peak_gpu_gb") or 0, ff_info.get("peak_gpu_gb") or 0)})
     return rows
@@ -216,9 +217,9 @@ def tab_nested():
     (OUT / "tab_nested.tex").write_text("\n".join(lines) + "\n")
 
 
-ABLATIONS = [("1113-da3ba-explore", "DA3-BA"), ("1115-abl-triangulate", "start from triangulation"),
-             ("1115-abl-simpleradial", "1-parameter radial camera"), ("1115-abl-fixintr", "fixed DA3 intrinsics"),
-             ("1115-abl-onestage", "no coarse-to-fine BA")]
+ABLATIONS = [("1113-da3ba-explore", "DA3-BA"), ("1115-abl-triangulate", "triangulated start"),
+             ("1115-abl-simpleradial", "1-param. camera"), ("1115-abl-fixintr", "fixed intrinsics"),
+             ("1115-abl-onestage", "single BA round")]
 GROUPS = [("colmap_fails", "(a)"), ("colmap_better", "(b)"), ("da3_good", "(c)")]  # explained in the caption
 
 

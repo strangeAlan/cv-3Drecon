@@ -292,3 +292,17 @@ Geometry:
   empty sparse model), the other on an Open3D voxel error in the completion; not re-run (result already negative).
 - Runtimes of the 11/13 runs are inflated (GPUs shared with graph-mining jobs from 11/13 ~17:25); use 1028-efficiency
   for runtime, and DA3-BA's own time_s breakdown (features_matching, ba) only as an order of magnitude.
+
+## 11/15 Ablation and DA3-BA runtime (results/1115-abl-*, runs/1115-efficiency, runs/1115-allviews-time)
+
+Ablation on the 13 exploration subsets, pose AUC@5 (all subsets; AUC@30 in brackets), DA3-BA = 89.2 (95.4):
+- init from COLMAP triangulation with DA3 cameras: 68.9 (87.7); initial points median 172 vs 5955 lifted
+  (1-1264 vs 1344-19872); playground random-20 s0 99.3 -> 0.5.
+- SIMPLE_RADIAL: 68.7 (90.7); still +21 over default COLMAP (47.9), DA3-BA RADIAL +30 over COLMAP-R (59.1).
+- fixed DA3 intrinsics (refine_focal / refine_distortion false, i.e. pinhole, no distortion): 35.5 (74.7), below DA3 (58.1).
+- single BA round [1 px, 4 px]: 88.2 (92.8); 12/13 subsets within 1 point; delivery_area random-20 s1 AUC@5 44.7 -> 30.7,
+  AUC@30 89.1 -> 54.4 (coarse round removes 15.9k observations, 9 views keep DA3 pose; one-stage refines all 20).
+Runtime (end to end incl. DA3, mean): 18 / 76 / 159 s for 5/10/20 views (3 scenes, neighbor), 214 s all views (11 scenes);
+BA on CPU 11-189 s, SIFT 5-20 s. VGGT-BA 22-231 s. Measured on GPU1 while the ablation runs/evals used GPU0 (CPU shared),
+so times may be slightly inflated. make_tables _ba_rows fixed to read source_run from the config.
+Report v2: runtime and ablation paragraphs written, no TODOs left (13 pages).
